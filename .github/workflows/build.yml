@@ -9,6 +9,8 @@ on:
   pull_request:
   push:
     branches: [main]
+    # A push that changes only docs has nothing to publish.
+    paths-ignore: ["docs/**", "**.md"]
   schedule:
     - cron: "23 2 * * 1"
   workflow_dispatch:
@@ -49,9 +51,40 @@ jobs:
         with:
           args: -color
 
+  # Whether this run has to build. A pull request that changes only docs
+  # (docs/** and *.md) skips build and test, and `ok` still reports, so the
+  # ruleset's required check passes. Every other event builds everything.
+  # A paths filter on pull_request would skip the whole workflow, `ok`
+  # included, and leave such a PR unmergeable.
+  changes:
+    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          code=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(git diff --name-only "$BASE...HEAD")
+            printf '%s\n' "$files"
+            if [ -z "$(grep -vE '^docs/|\.md$' <<<"$files" || true)" ]; then
+              code=false
+            fi
+          fi
+          echo "code=$code" >>"$GITHUB_OUTPUT"
+
   build:
     timeout-minutes: 45
-    needs: lint
+    needs: [lint, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -106,17 +139,20 @@ jobs:
       - run: scripts/install-test.sh ${{ matrix.target }} "file://$PWD/repo" repo/depot-test.asc
 
   # The one check the main ruleset requires, so the ruleset does not have to
-  # name every matrix job: it passes only if lint, every build and every test
-  # passed.
+  # name every matrix job: it passes only if lint passed and, unless the
+  # change is docs only, every build and every test passed.
   ok:
     timeout-minutes: 5
-    needs: [lint, build, test]
+    needs: [lint, changes, build, test]
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+      - if: >-
+          needs.lint.result != 'success' || needs.changes.result != 'success' ||
+          (needs.changes.outputs.code == 'true' &&
+          (needs.build.result != 'success' || needs.test.result != 'success'))
         run: exit 1
-      - run: echo "lint, build and test passed"
+      - run: echo "lint passed; build and test passed or were not needed"
 
   publish:
     timeout-minutes: 20
