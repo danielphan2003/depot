@@ -177,8 +177,10 @@ check_package() {
         key=${BASH_REMATCH[1]}
         case $key in
           pkgname | pkgbase | pkgver | pkgdesc | url | builddate | packager | size | arch | license | xdata | depend | optdepend | makedepend | checkdepend) ;;
-          # Only as packages/<name>/allow lists them, checked below.
-          provides | conflicts) relations+=("${BASH_REMATCH[1]} ${BASH_REMATCH[2]}") ;;
+          # Only as packages/<name>/allow lists them, checked below. makepkg
+          # writes conflicts=() as the key "conflict".
+          provides) relations+=("provides ${BASH_REMATCH[2]}") ;;
+          conflict) relations+=("conflicts ${BASH_REMATCH[2]}") ;;
           *) die "$base: .PKGINFO key '$key' is not allowed" ;;
         esac
         seen[$key]=$((${seen[$key]:-0} + 1))
@@ -188,7 +190,7 @@ check_package() {
           pkgver) [[ $line =~ ^([0-9]+:)?[A-Za-z0-9._+~]+-[0-9]+(\.[0-9]+)?$ ]] ;;
           arch) [[ $line =~ ^(x86_64|any)$ ]] ;;
           builddate | size) [[ $line =~ ^[0-9]+$ ]] ;;
-          depend | makedepend | checkdepend | provides | conflicts) [[ $line =~ ^[A-Za-z0-9@._+:-]+((<|<=|=|>=|>)[A-Za-z0-9._+:~-]+)?$ ]] ;;
+          depend | makedepend | checkdepend | provides | conflict) [[ $line =~ ^[A-Za-z0-9@._+:-]+((<|<=|=|>=|>)[A-Za-z0-9._+:~-]+)?$ ]] ;;
           optdepend) [[ $line =~ ^[A-Za-z0-9@._+-]+(: [^%]*)?$ ]] ;;
           *) true ;;
         esac || die "$base: .PKGINFO $key has a malformed value: $line"

@@ -163,10 +163,11 @@ test_arch() {
   if [[ " ${names[*]} " == *" run0-sudo-shim "* ]]; then
     local saved=$name
     name=run0-sudo-shim
-    expect_accepted "$(arch_pkg granted $'provides = sudo\nconflicts = sudo\n')"
+    expect_accepted "$(arch_pkg granted $'provides = sudo\nconflict = sudo\n')"
     expect_refused "$(arch_pkg otherprov $'provides = sudo\nprovides = glibc\n')" "'provides = glibc', which"
     expect_refused "$(arch_pkg versioned $'provides = sudo=9.9\n')" "'provides = sudo=9.9', which"
     expect_refused "$(arch_pkg shimreplaces $'replaces = sudo\n')" "key 'replaces' is not allowed"
+    expect_refused "$(arch_pkg pluralkey $'conflicts = sudo\n')" "key 'conflicts' is not allowed"
     name=$saved
   fi
 }
