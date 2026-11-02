@@ -19,7 +19,9 @@ depends=('cmark' 'gcc-libs' 'glibc' 'hicolor-icon-theme' 'java-runtime'
   'qt6-imageformats' 'qt6-networkauth' 'qt6-svg' 'tomlplusplus' 'zlib')
 makedepends=('cmake' 'extra-cmake-modules' 'gamemode' 'jdk17-openjdk' 'ninja'
   'scdoc' 'vulkan-headers')
-options=('!lto')
+# No debug info: depot drops debug packages, and -g for this Qt build filled
+# the runner's disk.
+options=('!lto' '!debug')
 source=("https://github.com/FreesmTeam/FreesmLauncher/releases/download/$pkgver/FreesmLauncher-$pkgver.tar.gz")
 sha256sums=('6fe070f9d6211b7dedeaeef4309d4014c15e66f8b6573da5652f070cb2c6dd62')
 
