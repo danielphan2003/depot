@@ -190,8 +190,9 @@ Upstream change:
 
 - **Deploy the infrastructure:** [Alchemy](https://alchemy.run) manages
   the `Depot` stack in [`infra/pkgs/alchemy.run.ts`](infra/pkgs/alchemy.run.ts):
-  the R2 bucket, the Worker and its custom domain, the `release`
-  environment, the `main` ruleset and the upload token. In `infra/pkgs/`,
+  the R2 bucket, the Worker and its custom domain, Bot Fight Mode (off for
+  the `c-137.me` zone), the `release` environment, the `main` ruleset and the
+  upload token. In `infra/pkgs/`,
   run `pnpm install` and `pnpm run check`, then
   `GITHUB_TOKEN=$(gh auth token) pnpm run deploy`. Cloudflare access comes
   from the `default` Alchemy profile (`pnpm exec alchemy profile edit --add

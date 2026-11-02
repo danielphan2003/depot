@@ -50,8 +50,11 @@ reveal nothing beyond which tools Daniel uses.
 | R2 public bucket (`r2.dev`) | same as R2 | yes | Cloudflare rate-limits `r2.dev` and says not to use it in production. |
 
 The Worker answers only on its custom domain, `pkgs.c-137.me`; its
-`workers.dev` address is off. Moving to another domain only changes the URL
-in each machine's repository file.
+`workers.dev` address is off. Bot Fight Mode is off for the whole
+`c-137.me` zone, declared in the same stack: it challenged every request
+from a cloud IP, which shut out both CI and cloud machines, and the Free
+plan cannot exempt one hostname. Moving to another domain only changes the
+URL in each machine's repository file.
 
 ## Sign with one OpenPGP key held in GitHub Actions
 
