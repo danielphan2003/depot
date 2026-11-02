@@ -6,8 +6,8 @@ include /usr/share/dpkg/pkg-info.mk
 
 export PATH := /usr/lib/go-1.26/bin:$(PATH)
 export GOTOOLCHAIN = local
-export GOPATH = $(CURDIR)/debian/.gopath
-export GOCACHE = $(CURDIR)/debian/.gocache
+export GOPATH = $(CURDIR)/../.gopath
+export GOCACHE = $(CURDIR)/../.gocache
 export GOFLAGS = -mod=readonly -modcacherw -trimpath
 export CGO_ENABLED = 0
 
@@ -26,7 +26,7 @@ override_dh_auto_install:
 	install -Dm755 ghq -t debian/ghq/usr/bin
 
 override_dh_auto_clean:
-	rm -rf ghq debian/.gopath debian/.gocache
+	rm -rf ghq ../.gopath ../.gocache
 
 override_dh_dwz:
 override_dh_strip:

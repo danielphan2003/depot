@@ -28,16 +28,16 @@ build() {
   cd "$pkgname-$pkgver"
   export GOFLAGS='-mod=readonly -modcacherw -trimpath' GOTOOLCHAIN=local
   local bi=github.com/superfly/flyctl/internal/buildinfo
-  CGO_ENABLED=0 go build -tags production -o flyctl -ldflags "-s -w \
+  CGO_ENABLED=0 go build -tags production -o bin/flyctl -ldflags "-s -w \
     -X $bi.buildDate=$(date -u -d "@${SOURCE_DATE_EPOCH:-0}" +%Y-%m-%dT%H:%M:%SZ) \
     -X $bi.buildVersion=$pkgver -X $bi.commit=v$pkgver" .
 }
 
 package() {
   cd "$pkgname-$pkgver"
-  install -Dm755 flyctl -t "$pkgdir/usr/bin"
-  printf '#!/bin/sh\nexec /usr/bin/flyctl "$@"\n' >fly
-  install -Dm755 fly -t "$pkgdir/usr/bin"
+  install -Dm755 bin/flyctl -t "$pkgdir/usr/bin"
+  printf '#!/bin/sh\nexec /usr/bin/flyctl "$@"\n' >bin/fly
+  install -Dm755 bin/fly -t "$pkgdir/usr/bin"
   install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }

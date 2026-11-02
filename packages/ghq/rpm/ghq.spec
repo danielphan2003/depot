@@ -31,7 +31,7 @@ install -Dm755 ghq -t %{buildroot}%{_bindir}
 
 %files
 %license LICENSE
-%doc README.md
+%doc README.adoc
 %{_bindir}/ghq
 
 %changelog

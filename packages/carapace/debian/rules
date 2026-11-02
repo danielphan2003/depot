@@ -6,8 +6,9 @@ include /usr/share/dpkg/pkg-info.mk
 
 export PATH := /usr/lib/go-1.26/bin:$(PATH)
 export GOTOOLCHAIN = local
-export GOPATH = $(CURDIR)/debian/.gopath
-export GOCACHE = $(CURDIR)/debian/.gocache
+# Outside the source tree: carapace-generate walks the tree it runs in.
+export GOPATH = $(CURDIR)/../.gopath
+export GOCACHE = $(CURDIR)/../.gocache
 export GOFLAGS = -mod=readonly -modcacherw -trimpath
 export CGO_ENABLED = 0
 
@@ -28,7 +29,7 @@ override_dh_auto_install:
 	install -Dm755 carapace -t debian/carapace/usr/bin
 
 override_dh_auto_clean:
-	rm -rf carapace debian/.gopath debian/.gocache
+	rm -rf carapace ../.gopath ../.gocache
 
 override_dh_dwz:
 override_dh_strip:
