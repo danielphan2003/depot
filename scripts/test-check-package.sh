@@ -98,6 +98,9 @@ test_arch() {
   # The capability first, the padding after it.
   (cd "$work/caps" && bsdtar --xattrs -cf - .PKGINFO "usr/bin/$name" "usr/lib/$name/pad" | zstd -qf -o "$f")
   expect_refused "$f" 'extended attributes'
+  # The same words inside a file are not a header: flyctl, a Go binary with
+  # archive/tar compiled in, contains them.
+  expect_accepted "$(arch_pkg paxtext "" "mkdir -p usr/lib/$name; printf '30 SCHILY.xattr.security.capability=x\nLIBARCHIVE.xattr.user.x=eA\n' > usr/lib/$name/data")"
 
   # A second .PKGINFO member, which pacman reads and repo-add does not.
   local dir=$work/dup
