@@ -21,20 +21,21 @@ targets() { echo arch debian-trixie fedora-44; }
 #   recipe    the recipe directory inside packages/<name>/
 #   prefixes  bucket prefixes this target owns (publish.sh replaces them)
 #   repo_dir  where the packages go, relative to the bucket root
+#   image     the container image that builds for it (matrix.sh)
 target_info() {
   case $1 in
     arch)
-      family=arch recipe=arch
+      family=arch recipe=arch image=docker.io/library/archlinux:base-devel
       repo_dir=arch/x86_64
       prefixes=(arch/x86_64/)
       ;;
     debian-trixie)
-      family=debian recipe=debian codename=trixie
+      family=debian recipe=debian codename=trixie image=docker.io/library/debian:trixie
       repo_dir=debian/pool/trixie/main
       prefixes=(debian/dists/trixie/ debian/pool/trixie/)
       ;;
     fedora-44)
-      family=fedora recipe=rpm
+      family=fedora recipe=rpm image=registry.fedoraproject.org/fedora:44
       repo_dir=fedora/44/x86_64
       prefixes=(fedora/44/x86_64/)
       ;;

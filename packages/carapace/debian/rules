@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+# As ../arch/PKGBUILD: `go generate ./cmd/...`, then a static build with the
+# `release` tag. Go 1.26 comes from trixie-backports (build only; the binary
+# is static). Modules come from proxy.golang.org, pinned by upstream's go.sum.
+include /usr/share/dpkg/pkg-info.mk
+
+export PATH := /usr/lib/go-1.26/bin:$(PATH)
+export GOTOOLCHAIN = local
+export GOPATH = $(CURDIR)/debian/.gopath
+export GOCACHE = $(CURDIR)/debian/.gocache
+export GOFLAGS = -mod=readonly -modcacherw -trimpath
+export CGO_ENABLED = 0
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	go mod download
+
+override_dh_auto_build:
+	cd cmd/carapace && go generate ./...
+	go build -tags release -ldflags "-s -w -X main.version=$(DEB_VERSION_UPSTREAM)" \
+	  -o carapace ./cmd/carapace
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -Dm755 carapace -t debian/carapace/usr/bin
+
+override_dh_auto_clean:
+	rm -rf carapace debian/.gopath debian/.gocache
+
+override_dh_dwz:
+override_dh_strip:

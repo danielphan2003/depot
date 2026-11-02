@@ -1,0 +1,43 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Reviewed from the AUR PKGBUILD `flyctl` (aur.git commit a21cf43, audited
+# 2026-11-03); see ../AUDIT.md. Builds the way upstream's .goreleaser.yml
+# does: `go generate ./...` (genqlient and mockgen, both pinned in go.mod),
+# then a static `production` build with the version stamped in. Changes from
+# the AUR: sha256 pin, GOTOOLCHAIN=local, upstream's ldflags and tag, no
+# `make test` (its tests reach Fly's API), and a two-line `fly` wrapper
+# instead of the symlink, since depot packages carry no links.
+pkgname=flyctl
+pkgver=0.5.2
+pkgrel=1
+pkgdesc='Command-line client for Fly.io'
+arch=('x86_64')
+url='https://github.com/superfly/flyctl'
+license=('Apache-2.0')
+makedepends=('go')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('7655f0fdc81a5c09c26c22a2d1786bbaa4470d0b7385d4683a9df8795a47bbb5')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  export GOFLAGS='-mod=readonly -modcacherw' GOTOOLCHAIN=local
+  go mod download
+  go generate ./...
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  export GOFLAGS='-mod=readonly -modcacherw -trimpath' GOTOOLCHAIN=local
+  local bi=github.com/superfly/flyctl/internal/buildinfo
+  CGO_ENABLED=0 go build -tags production -o flyctl -ldflags "-s -w \
+    -X $bi.buildDate=$(date -u -d "@${SOURCE_DATE_EPOCH:-0}" +%Y-%m-%dT%H:%M:%SZ) \
+    -X $bi.buildVersion=$pkgver -X $bi.commit=v$pkgver" .
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 flyctl -t "$pkgdir/usr/bin"
+  printf '#!/bin/sh\nexec /usr/bin/flyctl "$@"\n' >fly
+  install -Dm755 fly -t "$pkgdir/usr/bin"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

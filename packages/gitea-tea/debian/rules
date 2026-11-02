@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+# As ../rpm/gitea-tea.spec. Go 1.26 comes from trixie-backports (build only; the
+# binary is static). Modules come from proxy.golang.org, pinned by upstream's
+# go.sum.
+include /usr/share/dpkg/pkg-info.mk
+
+export PATH := /usr/lib/go-1.26/bin:$(PATH)
+export GOTOOLCHAIN = local
+export GOPATH = $(CURDIR)/debian/.gopath
+export GOCACHE = $(CURDIR)/debian/.gocache
+export GOFLAGS = -mod=readonly -modcacherw -trimpath
+export CGO_ENABLED = 0
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	go mod download
+
+override_dh_auto_build:
+	go build -ldflags "-s -w -X gitea.dev/tea/modules/version.Version=$(DEB_VERSION_UPSTREAM) -X gitea.dev/tea/modules/version.SDK=$$(go list -f "{{.Version}}" -m gitea.dev/sdk)" -o tea .
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -Dm755 tea -t debian/gitea-tea/usr/bin
+
+override_dh_auto_clean:
+	rm -rf tea debian/.gopath debian/.gocache
+
+override_dh_dwz:
+override_dh_strip:

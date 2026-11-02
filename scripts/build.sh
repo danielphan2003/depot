@@ -1,18 +1,31 @@
 #!/usr/bin/env bash
-# build.sh <target> <outdir>
+# build.sh <target> <outdir> [package...]
+# build.sh --prepare <target>
 #
-# Build every package that has a recipe for <target>, inside a throwaway
-# container of that distribution running as root (CI's `container:` job, or
-# `podman run`). It first upgrades the container, so packages build and link
-# against the distribution as it is today. Upstream build code runs here: never
-# give this step a secret.
+# Build the named packages, or every package that has a recipe for <target>,
+# inside a throwaway container of that distribution running as root (CI's
+# `container:` job, or `podman run`). It first upgrades the container, so
+# packages build and link against the distribution as it is today. Upstream
+# build code runs here: never give this step a secret. CI builds one package
+# per job, so one package's build code never sees another's output.
+#
+# --prepare only upgrades the container and installs the build tools, which
+# test-check-package.sh needs to craft its test packages.
 source "$(dirname "$0")/lib.sh"
 
-[[ $# -eq 2 ]] || die "usage: build.sh <target> <outdir>"
+prepare_only=0
+if [[ ${1:-} == --prepare ]]; then
+  prepare_only=1
+  shift
+  [[ $# -eq 1 ]] || die "usage: build.sh --prepare <target>"
+  set -- "$1" "$(mktemp -d)"
+fi
+[[ $# -ge 2 ]] || die "usage: build.sh <target> <outdir> [package...]"
 target=$1
 target_info "$target"
 mkdir -p "$2"
 out=$(cd "$2" && pwd)
+shift 2
 work=$(mktemp -d)
 
 prepare_arch() {
@@ -26,6 +39,12 @@ prepare_arch() {
 
 prepare_debian() {
   export DEBIAN_FRONTEND=noninteractive
+  # Backports, for build tools newer than the release ships (golang-1.26-go).
+  # A built package may not need them at run time: install-test.sh installs
+  # into a plain container without backports, so a runtime dependency on one
+  # fails the test.
+  printf 'Types: deb\nURIs: http://deb.debian.org/debian\nSuites: %s-backports\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n' \
+    "$codename" >/etc/apt/sources.list.d/backports.sources
   apt-get update -q
   apt-get -qy dist-upgrade
   apt-get -qy install --no-install-recommends build-essential devscripts equivs curl ca-certificates
@@ -73,7 +92,16 @@ build_fedora() {
 }
 
 "prepare_$family"
-mapfile -t names < <(packages_for)
+[[ $prepare_only -eq 0 ]] || { log "prepared $target"; exit 0; }
+mapfile -t known < <(packages_for)
+if [[ $# -gt 0 ]]; then
+  for name in "$@"; do
+    [[ " ${known[*]} " == *" $name "* ]] || die "$name has no recipe for $target"
+  done
+  names=("$@")
+else
+  names=("${known[@]}")
+fi
 for name in "${names[@]}"; do
   log "building $name for $target"
   "build_$family" "$name"

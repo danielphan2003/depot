@@ -1,0 +1,38 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Reviewed from the AUR PKGBUILD `carapace` (aur.git commit db93fc6, audited
+# 2026-11-03); see ../AUDIT.md. Builds the way upstream's .goreleaser.yml
+# does: `go generate ./cmd/...` (code generated from the source tree and the
+# go.sum-pinned modules, no network beyond the module proxy), then a static
+# build with the `release` tag. Changes from the AUR: `-trimpath`,
+# GOTOOLCHAIN=local, upstream's tag set instead of `release,force_all`.
+pkgname=carapace
+pkgver=1.8.2
+pkgrel=1
+pkgdesc='Multi-shell multi-command argument completer'
+arch=('x86_64')
+url='https://github.com/carapace-sh/carapace-bin'
+license=('MIT')
+makedepends=('go')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('56b934e1c94cb4e10d912c0158a74f8b727e430e6d9c8aff5bfb99e124fa3ace')
+
+prepare() {
+  cd "carapace-bin-$pkgver"
+  export GOFLAGS='-mod=readonly -modcacherw' GOTOOLCHAIN=local
+  go mod download
+}
+
+build() {
+  cd "carapace-bin-$pkgver"
+  export GOFLAGS='-mod=readonly -modcacherw -trimpath' GOTOOLCHAIN=local
+  (cd cmd/carapace && go generate ./...)
+  CGO_ENABLED=0 go build -tags release \
+    -ldflags "-s -w -X main.version=$pkgver" -o carapace ./cmd/carapace
+}
+
+package() {
+  cd "carapace-bin-$pkgver"
+  install -Dm755 carapace -t "$pkgdir/usr/bin"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

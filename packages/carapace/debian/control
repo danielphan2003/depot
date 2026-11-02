@@ -1,0 +1,18 @@
+Source: carapace
+Section: utils
+Priority: optional
+Maintainer: depot <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               golang-1.26-go,
+               ca-certificates,
+Standards-Version: 4.7.2
+Homepage: https://github.com/carapace-sh/carapace-bin
+Rules-Requires-Root: no
+
+Package: carapace
+Architecture: amd64
+Depends: ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: multi-shell multi-command argument completer
+ Completions for many commands in bash, zsh, fish, nushell, elvish and
+ other shells. Built by depot from the upstream release.

@@ -33,6 +33,19 @@ breakage is caught.
 | Package | Version | Targets | Why |
 | --- | --- | --- | --- |
 | [`age-plugin-fido2-hmac`](packages/age-plugin-fido2-hmac) | 0.5.0 | all | lets age decrypt with a FIDO2 key |
+| [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root |
+| [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
+| [`custota-tool`](packages/custota-tool) | 6.8 | arch | signs Custota OTA update metadata |
+| [`difftastic`](packages/difftastic) | 0.72.0 | debian-trixie | structural diff; Arch and Fedora ship it |
+| [`dpibreak`](packages/dpibreak) | 0.6.2 | arch | system-wide DPI circumvention |
+| [`dufs`](packages/dufs) | 0.47.0 | arch | small file server |
+| [`ente-cli`](packages/ente-cli) | 0.4.2 | arch | Ente command-line client |
+| [`flyctl`](packages/flyctl) | 0.5.2 | arch | Fly.io command-line client |
+| [`ghq`](packages/ghq) | 1.11.2 | debian-trixie, fedora-44 | repository manager; Arch ships it |
+| [`gitea-tea`](packages/gitea-tea) | 0.16.0 | debian-trixie, fedora-44 | Gitea CLI (`tea`); Arch ships it as `tea`, Debian's `tea` is an editor |
+| [`lazygit`](packages/lazygit) | 0.66.2 | fedora-44 | git TUI; Arch and Debian ship it |
+| [`sd`](packages/sd) | 1.1.0 | fedora-44 | find and replace; Arch and Debian ship it |
+| [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
 
 Only packages Daniel asked for go in here.
 
@@ -68,11 +81,15 @@ A package builds for every target whose recipe directory exists.
    `lint` and the required `ok` check.
    - `lint` checks that every recipe agrees with `package.env` and runs
      ShellCheck.
-   - `build` builds each target in a container of that distribution, after
-     a full upgrade, so packages link against today's libraries. It runs
-     `scripts/test-check-package.sh`, which feeds `check_package` crafted
-     hostile packages and the real ones, then signs a test repository with
-     a throwaway key.
+   - `build` builds each package for each target in a job of its own
+     (`scripts/matrix.sh` lists them), in a container of that distribution,
+     after a full upgrade, so packages link against today's libraries. One
+     package's build code never sees another's output.
+   - `repo` gathers each target's packages with `scripts/collect.sh`, which
+     refuses a job's output unless every package in it has that job's
+     package name. It runs `scripts/test-check-package.sh`, which feeds
+     `check_package` crafted hostile packages and the real ones, then signs
+     a test repository with a throwaway key.
    - `test` installs from that test repository into a fresh container. It
      runs each `test.sh` and fails if a binary has a missing library.
    - `publish` (pushes to `main`, or a manual run with `publish` ticked) signs with the real key and uploads.
@@ -112,13 +129,16 @@ Do this only for a package Daniel asked for.
 
    ```bash
    podman run --rm -v "$PWD:/src:Z" -w /src docker.io/library/archlinux:base-devel \
-     bash -c 'scripts/build.sh arch out/arch && scripts/test-repo.sh arch out/arch repo/arch'
+     bash -c 'scripts/build.sh arch out/arch <name> && scripts/test-repo.sh arch out/arch repo/arch'
    podman run --rm -v "$PWD:/src:ro,Z" -w /src docker.io/library/archlinux:latest \
      scripts/install-test.sh arch file:///src/repo/arch repo/arch/depot-test.asc
    ```
 
-   For the other targets, use `debian-trixie` with `debian:trixie`, and
-   `fedora-44` with `registry.fedoraproject.org/fedora:44`.
+   Leave out `<name>` to build every package. For the other targets, use
+   `debian-trixie` with `debian:trixie`, and `fedora-44` with
+   `registry.fedoraproject.org/fedora:44`. Debian builds may use build tools
+   from trixie-backports (`golang-1.26-go`), never runtime libraries: the
+   install test runs without backports.
 5. Run `scripts/lint.sh`, open a PR, and wait for `build` to pass.
 
 ## Update a package
