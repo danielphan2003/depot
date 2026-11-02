@@ -26,6 +26,11 @@ for dir in "$DEPOT_ROOT"/packages/*/; do
     err "$name: AUDIT.md has no '## $pkg_version-<release>' entry; audit the upstream change first"
   fi
   grep -q "^\[$name\]" "$DEPOT_ROOT/nvchecker.toml" || err "$name: no [$name] entry in nvchecker.toml"
+  if [[ -f $dir/allow ]]; then
+    (allowed_paths "$name" >/dev/null) || err "$name: allow is malformed"
+    grep -q "^- \*\*Allowed paths:\*\*" "$dir/AUDIT.md" ||
+      err "$name: has an allow file, so AUDIT.md needs an '- **Allowed paths:**' item saying why"
+  fi
 
   found=0
   if [[ -f $dir/arch/PKGBUILD ]]; then

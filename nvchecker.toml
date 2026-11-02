@@ -77,3 +77,14 @@ source = "github"
 github = "starship/starship"
 use_latest_release = true
 prefix = "v"
+
+[fcitx5-lotus]
+source = "github"
+github = "LotusInputMethod/fcitx5-lotus"
+use_latest_release = true
+prefix = "v"
+
+[freesmlauncher]
+source = "github"
+github = "FreesmTeam/FreesmLauncher"
+use_latest_release = true

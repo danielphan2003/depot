@@ -144,6 +144,17 @@ test_arch() {
   pkginfo >"$dir/.PKGINFO"
   (cd "$dir" && bsdtar -s ",^usr/bin/$name\$,usr/lib/$name/../evil," -cf - .PKGINFO "usr/bin/$name" | zstd -qf -o "$work/dots.pkg.tar.zst")
   expect_refused "$work/dots.pkg.tar.zst" '\.\. components'
+
+  # packages/<name>/allow grants exact paths, not the directories they are
+  # in: a neighbour of an allowed unit or udev rule is still refused.
+  if [[ " ${names[*]} " == *" fcitx5-lotus "* ]]; then
+    local saved=$name
+    name=fcitx5-lotus
+    expect_refused "$(arch_pkg allowunit "" 'mkdir -p usr/lib/systemd/system; printf x > usr/lib/systemd/system/evil.service')" 'installs outside'
+    expect_refused "$(arch_pkg allowudev "" 'mkdir -p usr/lib/udev/rules.d; printf x > usr/lib/udev/rules.d/00-evil.rules')" 'installs outside'
+    expect_refused "$(arch_pkg allowparent "" 'mkdir -p usr/lib/systemd/system/fcitx5-lotus-server@.service.d; printf x > usr/lib/systemd/system/fcitx5-lotus-server@.service.d/x.conf')" 'installs outside'
+    name=$saved
+  fi
 }
 
 # --- debian -----------------------------------------------------------------

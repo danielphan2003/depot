@@ -1,0 +1,42 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Reviewed from the AUR PKGBUILDs `fcitx5-lotus` (aur.git commit 8c40b0a) and
+# `fcitx5-lotus-bin` (c91edc7), both by the upstream author; audited
+# 2026-11-03, see ../AUDIT.md. Changes: the sha256-pinned tag tarball instead
+# of an unpinned git clone, no OpenRC/runit split packages, no install script
+# (it only ran `udevadm control --reload-rules; udevadm trigger` and printed
+# instructions; systemd's own pacman hooks reload udev rules and sysusers),
+# and the tests are built and run.
+#
+# The package installs root-level integration that depot normally refuses;
+# ../allow lists each path (Daniel approved, 2026-11-03).
+pkgname=fcitx5-lotus
+pkgver=6.0.4
+pkgrel=1
+pkgdesc='Vietnamese input method for fcitx5'
+arch=('x86_64')
+url='https://github.com/LotusInputMethod/fcitx5-lotus'
+license=('GPL-3.0-or-later')
+depends=('acl' 'dbus' 'fcitx5' 'fcitx5-configtool' 'fcitx5-gtk' 'fcitx5-qt'
+  'gcc-libs' 'glibc' 'hicolor-icon-theme' 'libevdev' 'libinput' 'libnotify'
+  'libudev.so' 'python' 'python-dbus' 'python-pyqt6' 'python-qtpy')
+makedepends=('cmake' 'extra-cmake-modules' 'ninja')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('01aab5d583d801e577c8985aa00f1bb3a8ca346a6769bd0f439ef675d2d6b89c')
+
+build() {
+  cmake -S "$pkgname-$pkgver" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=/usr/lib \
+    -DBUILD_TESTING=ON
+  cmake --build build
+}
+
+check() {
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$pkgname-$pkgver/README.en.md" -t "$pkgdir/usr/share/doc/$pkgname"
+}

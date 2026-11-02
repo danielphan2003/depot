@@ -1,0 +1,13 @@
+# Paths beyond depot's default set that freesmlauncher may install
+# (scripts/lib.sh, allowed_paths): what a desktop app needs to appear in the
+# menu. Daniel approved desktop files and icons on 2026-11-03. Each pattern is
+# a whole path, an extended regular expression.
+
+path usr/share/applications/org\.freesmlauncher\.FreesmLauncher\.desktop
+path usr/share/icons/hicolor/(256x256|scalable)/apps/org\.freesmlauncher\.FreesmLauncher\.(png|svg)
+path usr/share/metainfo/org\.freesmlauncher\.FreesmLauncher\.metainfo\.xml
+# The MIME type for its instance archives; pacman's shared-mime-info hook
+# runs update-mime-database on it.
+path usr/share/mime/packages/org\.freesmlauncher\.FreesmLauncher\.xml
+# The launcher's Java helpers (NewLaunch.jar, JavaCheck.jar) and qtlogging.ini.
+path usr/share/FreesmLauncher/[A-Za-z0-9_.-]+

@@ -1,0 +1,47 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Reviewed from the AUR PKGBUILD `freesmlauncher` (aur.git commit fade773, by
+# a FreesmTeam member; audited 2026-11-03), see ../AUDIT.md. Kept: upstream's
+# release source tarball (it carries the git submodules), its CMake options
+# and the test run. Changes: Maintainer line, no optdepends. depot replaces the
+# AUR's `freesmlauncher-bin`, which repackaged the portable build under /opt.
+#
+# A desktop app installs a menu entry, icons, AppStream metadata and a MIME
+# type; ../allow lists them (Daniel approved, 2026-11-03).
+pkgname=freesmlauncher
+pkgver=2.3.1
+pkgrel=1
+pkgdesc='Minecraft launcher with offline accounts support (a Prism Launcher fork)'
+arch=('x86_64')
+url='https://github.com/FreesmTeam/FreesmLauncher'
+license=('GPL-3.0-only AND LGPL-3.0-or-later AND LGPL-2.0-or-later AND Apache-2.0 AND MIT AND LicenseRef-Batch AND OFL-1.1')
+depends=('cmark' 'gcc-libs' 'glibc' 'hicolor-icon-theme' 'java-runtime'
+  'libarchive' 'mesa-utils' 'pciutils' 'qrencode' 'qt6-base'
+  'qt6-imageformats' 'qt6-networkauth' 'qt6-svg' 'tomlplusplus' 'zlib')
+makedepends=('cmake' 'extra-cmake-modules' 'gamemode' 'jdk17-openjdk' 'ninja'
+  'scdoc' 'vulkan-headers')
+options=('!lto')
+source=("https://github.com/FreesmTeam/FreesmLauncher/releases/download/$pkgver/FreesmLauncher-$pkgver.tar.gz")
+sha256sums=('6fe070f9d6211b7dedeaeef4309d4014c15e66f8b6573da5652f070cb2c6dd62')
+
+build() {
+  export PATH="/usr/lib/jvm/java-17-openjdk/bin:$PATH"
+  cmake -S "FreesmLauncher-$pkgver" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DLauncher_BUILD_PLATFORM=archlinux \
+    -DLauncher_ENABLE_JAVA_DOWNLOADER=ON \
+    -DLauncher_DISABLE_WERROR=ON \
+    -DCMAKE_C_FLAGS="$CFLAGS -DNDEBUG" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -DNDEBUG"
+  cmake --build build
+}
+
+check() {
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "FreesmLauncher-$pkgver/LICENSE" "FreesmLauncher-$pkgver/docs/COPYING.md" \
+    -t "$pkgdir/usr/share/licenses/$pkgname"
+}
