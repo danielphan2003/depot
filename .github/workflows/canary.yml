@@ -1,0 +1,63 @@
+# Daily: install every published package into a fresh, fully upgraded
+# container of its distribution, run its smoke test, and check that no binary
+# lost a shared library. This catches a distribution library bump (a new
+# soname) that broke a published binary. On failure it opens an issue; the fix
+# is scripts/bump-release.sh so CI publishes a rebuild.
+name: canary
+
+on:
+  schedule:
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DEPOT_URL: https://pkgs.c-137.me
+
+jobs:
+  install:
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: arch, image: "docker.io/library/archlinux:latest" }
+          # CachyOS uses the Arch repository too.
+          - { target: arch, image: "docker.io/cachyos/cachyos-v3:latest" }
+          - { target: debian-trixie, image: "docker.io/library/debian:trixie" }
+          - { target: fedora-44, image: "registry.fedoraproject.org/fedora:44" }
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: scripts/install-test.sh ${{ matrix.target }} "$DEPOT_URL" keys/depot.asc
+
+  report:
+    timeout-minutes: 10
+    needs: install
+    if: always()
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - if: needs.install.result == 'failure'
+        run: |
+          scripts/report.sh open "canary: published packages broken" \
+            "Installing the published packages into current distribution containers failed: $RUN_URL. If the log shows a missing shared library or an unsatisfiable dependency, run scripts/bump-release.sh <package> <target> in a PR so CI publishes a rebuild."
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - if: needs.install.result == 'success'
+        run: |
+          scripts/report.sh close "canary: published packages broken" "Canary passed. $RUN_URL"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

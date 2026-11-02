@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+# Plain `go build` with upstream's go.sum pinning the modules, as in
+# ../arch/PKGBUILD. Modules come from proxy.golang.org during the build,
+# so this needs network access (fine for depot's CI, not for a Debian buildd).
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+include /usr/share/dpkg/pkg-info.mk
+include /usr/share/dpkg/buildflags.mk
+
+export GOTOOLCHAIN = local
+export GOPATH = $(CURDIR)/debian/.gopath
+export GOCACHE = $(CURDIR)/debian/.gocache
+export GOFLAGS = -mod=readonly -modcacherw -trimpath
+export CGO_CPPFLAGS = $(CPPFLAGS)
+export CGO_CFLAGS = $(CFLAGS)
+export CGO_CXXFLAGS = $(CXXFLAGS)
+export CGO_LDFLAGS = $(LDFLAGS)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	go mod download
+
+override_dh_auto_build:
+	go build -buildmode=pie \
+	  -ldflags "-linkmode=external -X main.Version=v$(DEB_VERSION_UPSTREAM)" \
+	  -o age-plugin-fido2-hmac ./cmd/age-plugin-fido2-hmac
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	go test ./...
+endif
+
+override_dh_auto_install:
+	install -Dm755 age-plugin-fido2-hmac -t debian/age-plugin-fido2-hmac/usr/bin
+
+override_dh_auto_clean:
+	rm -rf age-plugin-fido2-hmac debian/.gopath debian/.gocache
+
+# dwz does not understand Go's DWARF.
+override_dh_dwz:

@@ -1,0 +1,10 @@
+allowBuilds:
+  esbuild: true
+  workerd: true
+# Keep every Effect package on the release alchemy 2.0.0-beta.84 is tested
+# with, as T3 Code does.
+overrides:
+  effect: 4.0.5
+  "@effect/platform-node": 4.0.5
+  "@effect/platform-node-shared": 4.0.5
+  "@effect/sql-d1": 4.0.5

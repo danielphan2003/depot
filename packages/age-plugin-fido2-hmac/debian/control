@@ -1,0 +1,19 @@
+Source: age-plugin-fido2-hmac
+Section: utils
+Priority: optional
+Maintainer: depot <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               golang-go (>= 2:1.24~),
+               libfido2-dev,
+               pkgconf,
+               ca-certificates,
+Standards-Version: 4.7.2
+Homepage: https://github.com/olastor/age-plugin-fido2-hmac
+Rules-Requires-Root: no
+
+Package: age-plugin-fido2-hmac
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: age plugin to encrypt files with FIDO2 tokens (hmac-secret)
+ Plugin for age that encrypts and decrypts files with a FIDO2 security key,
+ using the hmac-secret extension. Built by depot from the upstream release.

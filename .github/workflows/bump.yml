@@ -1,0 +1,83 @@
+# Daily: ask nvchecker for each package's latest upstream release and open a
+# pull request per update. The PR only moves the recipes to the new tag; an
+# agent audits the upstream change before it is merged (README.md).
+#
+# nvchecker and its dependencies are third-party code, so they run in a job
+# with a read-only token, installed from hash-pinned requirements. The job
+# that can push and open PRs runs only depot's own scripts.
+name: bump
+
+on:
+  schedule:
+    - cron: "7 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump
+  cancel-in-progress: false
+
+jobs:
+  check:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    outputs:
+      updates: ${{ steps.nvchecker.outputs.updates }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: |
+          python3 -m venv "$RUNNER_TEMP/nvchecker"
+          "$RUNNER_TEMP/nvchecker/bin/pip" install --quiet --require-hashes --only-binary :all: -r ci/nvchecker.txt
+          echo "$RUNNER_TEMP/nvchecker/bin" >>"$GITHUB_PATH"
+      - id: nvchecker
+        run: |
+          scripts/nvcheck.sh | tee "$RUNNER_TEMP/updates"
+          { echo 'updates<<EOF'; cat "$RUNNER_TEMP/updates"; echo EOF; } >>"$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  open-prs:
+    timeout-minutes: 15
+    needs: check
+    if: needs.check.outputs.updates != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          printf '%s\n' "$UPDATES" >"$RUNNER_TEMP/updates"
+          scripts/open-bump-prs.sh "$RUNNER_TEMP/updates"
+        env:
+          UPDATES: ${{ needs.check.outputs.updates }}
+          GH_TOKEN: ${{ github.token }}
+
+  report:
+    needs: [check, open-prs]
+    if: failure()
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Open or update the issue
+        run: |
+          scripts/report.sh open "bump: nvchecker run failed" \
+            "The daily version check failed: $RUN_URL. Upstream updates are not being proposed until it is fixed."
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
