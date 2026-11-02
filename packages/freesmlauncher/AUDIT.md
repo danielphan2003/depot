@@ -33,7 +33,8 @@ read it. A version bump without an entry here does not get merged.
 - **Allowed paths:** `allow` grants the menu entry, the two icons, the
   AppStream metadata, the MIME type (pacman's shared-mime-info hook runs
   `update-mime-database` on it) and `usr/share/FreesmLauncher/` for the Java
-  helpers and `qtlogging.ini`. Daniel approved desktop files and icons for
+  helpers and `qtlogging.ini`, and its Qt logging categories file. Daniel
+  approved desktop files and icons for
   this package on 2026-11-03. Nothing here runs as root.
 - **Install:** no install script, no units, no setuid files.
 - **Upstream status:** active (release 2.3.1 on 2026-09-29), same team.

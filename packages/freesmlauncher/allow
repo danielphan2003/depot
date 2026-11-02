@@ -11,3 +11,5 @@ path usr/share/metainfo/org\.freesmlauncher\.FreesmLauncher\.metainfo\.xml
 path usr/share/mime/packages/org\.freesmlauncher\.FreesmLauncher\.xml
 # The launcher's Java helpers (NewLaunch.jar, JavaCheck.jar) and qtlogging.ini.
 path usr/share/FreesmLauncher/[A-Za-z0-9_.-]+
+# Qt's logging categories for the launcher (read by qtdiag and kdebugsettings).
+path usr/share/qlogging-categories6/freesmlauncher\.categories
