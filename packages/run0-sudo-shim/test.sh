@@ -9,6 +9,7 @@ echo "sudo --version: $out"
 grep -aq /usr/bin/run0 /usr/bin/sudo
 # The sudo package is replaced, not installed beside it.
 if command -v pacman >/dev/null; then
-  if pacman -Q sudo >/dev/null 2>&1; then echo "the sudo package is installed too" >&2; exit 1; fi
+  # pacman -Q answers for whatever provides sudo, so compare the name.
+  [ "$(pacman -Qq sudo)" = run0-sudo-shim ]
   [ "$(pacman -Qoq /usr/bin/sudo)" = run0-sudo-shim ]
 fi
