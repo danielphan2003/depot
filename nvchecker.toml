@@ -1,0 +1,9 @@
+# Upstream release sources for scripts/nvcheck.sh (nvchecker 2.x). One entry
+# per package directory, with the same name. Docs:
+# https://nvchecker.readthedocs.io/en/latest/usage.html
+
+[age-plugin-fido2-hmac]
+source = "github"
+github = "olastor/age-plugin-fido2-hmac"
+use_latest_release = true
+prefix = "v"

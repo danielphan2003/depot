@@ -1,0 +1,22 @@
+{
+  "name": "depot-pkgs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc",
+    "deploy": "alchemy deploy --stage prod",
+    "plan": "alchemy plan --stage prod"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261018.1",
+    "@effect/platform-node": "4.0.5",
+    "@types/node": "26.6.5",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "@alchemy.run/cloudflare": "2.0.0-beta.84",
+    "@alchemy.run/github": "2.0.0-beta.84",
+    "alchemy": "2.0.0-beta.84",
+    "effect": "4.0.5"
+  }
+}
