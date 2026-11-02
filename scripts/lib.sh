@@ -148,7 +148,8 @@ pkg_dest() {
 # recipes. The package must:
 #   - be named after a package directory with a recipe for this target;
 #   - declare no replaces, provides (beyond its own name), conflicts,
-#     obsoletes, breaks, pre-depends or Essential;
+#     obsoletes, breaks, pre-depends or Essential, except Arch provides and
+#     conflicts that its recipe's packages/<name>/allow grants one by one;
 #   - carry no install scripts, triggers, file capabilities or extended
 #     attributes;
 #   - contain only regular files and directories, with plain names, in
@@ -160,6 +161,7 @@ pkg_dest() {
 # Daniel's approval.
 check_package() {
   local file=$1 base=${1##*/} name ver names listing owners bad line key
+  local -a relations=()
   case $family in
     arch)
       # repo-add declares a shell variable per .PKGINFO key, so validate the
@@ -175,6 +177,8 @@ check_package() {
         key=${BASH_REMATCH[1]}
         case $key in
           pkgname | pkgbase | pkgver | pkgdesc | url | builddate | packager | size | arch | license | xdata | depend | optdepend | makedepend | checkdepend) ;;
+          # Only as packages/<name>/allow lists them, checked below.
+          provides | conflicts) relations+=("${BASH_REMATCH[1]} ${BASH_REMATCH[2]}") ;;
           *) die "$base: .PKGINFO key '$key' is not allowed" ;;
         esac
         seen[$key]=$((${seen[$key]:-0} + 1))
@@ -184,7 +188,7 @@ check_package() {
           pkgver) [[ $line =~ ^([0-9]+:)?[A-Za-z0-9._+~]+-[0-9]+(\.[0-9]+)?$ ]] ;;
           arch) [[ $line =~ ^(x86_64|any)$ ]] ;;
           builddate | size) [[ $line =~ ^[0-9]+$ ]] ;;
-          depend | makedepend | checkdepend) [[ $line =~ ^[A-Za-z0-9@._+:-]+((<|<=|=|>=|>)[A-Za-z0-9._+:~-]+)?$ ]] ;;
+          depend | makedepend | checkdepend | provides | conflicts) [[ $line =~ ^[A-Za-z0-9@._+:-]+((<|<=|=|>=|>)[A-Za-z0-9._+:~-]+)?$ ]] ;;
           optdepend) [[ $line =~ ^[A-Za-z0-9@._+-]+(: [^%]*)?$ ]] ;;
           *) true ;;
         esac || die "$base: .PKGINFO $key has a malformed value: $line"
@@ -273,6 +277,14 @@ check_package() {
   [[ $name =~ ^[a-z0-9][a-z0-9.+_-]*$ && -f $DEPOT_ROOT/packages/$name/package.env && -e $DEPOT_ROOT/packages/$name/$recipe ]] ||
     die "$base: package '$name' has no recipe for $family; refusing it"
 
+  # Relations to other packages, each one exactly as the recipe's allow file
+  # grants it (Arch only; elsewhere they are refused above).
+  local rel
+  for rel in "${relations[@]}"; do
+    grep -qxF -- "$rel" <(allowed_relations "$name") ||
+      die "$base: declares '${rel/ / = }', which packages/$name/allow does not grant"
+  done
+
   # Plain names only, each once, so no listing below can be misread.
   bad=$(grep -E '[[:space:][:cntrl:]\\]' <<<"$names" || true)
   [[ -z $bad ]] || die "$base: file names with whitespace or control characters"
@@ -315,6 +327,20 @@ check_package() {
   [[ -z $bad ]] || die "$base: installs outside usr/bin, usr/lib{,64}/$name, usr/share/{doc,licenses}/$name, usr/share/man and packages/$name/allow: $bad"
 }
 
+# allowed_relations <name>: the Arch relations packages/<name>/allow grants,
+# one "<key> <value>" per line, from entries `relation provides <value>` or
+# `relation conflicts <value>`. Granting one needs Daniel's approval.
+allowed_relations() {
+  local file=$DEPOT_ROOT/packages/$1/allow kind key value rest
+  [[ -f $file ]] || return 0
+  while read -r kind key value rest; do
+    [[ $kind == relation ]] || continue
+    [[ $key =~ ^(provides|conflicts)$ && $value =~ ^[A-Za-z0-9@._+:-]+$ && -z $rest ]] ||
+      die "$file: malformed entry: relation $key $value $rest"
+    printf '%s %s\n' "$key" "$value"
+  done <"$file"
+}
+
 # allowed_paths <name>: the extra paths packages/<name>/allow grants, as one
 # extended regular expression of whole paths (empty if none). The file is a
 # reviewed part of the recipe; nothing in a built package can change it. Each
@@ -326,6 +352,7 @@ allowed_paths() {
   while read -r kind pattern rest; do
     case $kind in
       '' | '#'*) continue ;;
+      relation) continue ;; # allowed_relations
       path)
         [[ -n $pattern && -z $rest && $pattern != */ && $pattern =~ ^usr/ ]] ||
           die "$file: malformed entry: path $pattern $rest"

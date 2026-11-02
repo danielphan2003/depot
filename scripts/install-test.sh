@@ -33,7 +33,10 @@ SigLevel = Required DatabaseRequired
 Server = $base/arch/\$arch
 CONF
     pacman -Sy --noconfirm
-    pacman -S --noconfirm "${names[@]/#/depot/}"
+    # --ask 4 accepts removing a conflicting package, as a machine does when
+    # a depot package replaces one (run0-sudo-shim replaces sudo; only
+    # relations that packages/<name>/allow grants get published).
+    pacman -S --noconfirm --ask 4 "${names[@]/#/depot/}"
     files() { pacman -Qlq "$1"; }
     ;;
   debian)

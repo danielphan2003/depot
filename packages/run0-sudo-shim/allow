@@ -1,0 +1,6 @@
+# Relations to other packages that run0-sudo-shim may declare
+# (scripts/lib.sh, allowed_relations). Daniel approved them on 2026-11-03.
+# The shim is /usr/bin/sudo: it must stand in for the sudo package, which
+# base-devel and qt-sudo depend on, and must never be installed beside it.
+relation provides sudo
+relation conflicts sudo

@@ -88,3 +88,8 @@ prefix = "v"
 source = "github"
 github = "FreesmTeam/FreesmLauncher"
 use_latest_release = true
+
+[run0-sudo-shim]
+source = "github"
+github = "GrimmTheShrimp/run0-sudo-shim"
+use_latest_release = true

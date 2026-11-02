@@ -27,7 +27,7 @@ for dir in "$DEPOT_ROOT"/packages/*/; do
   fi
   grep -q "^\[$name\]" "$DEPOT_ROOT/nvchecker.toml" || err "$name: no [$name] entry in nvchecker.toml"
   if [[ -f $dir/allow ]]; then
-    (allowed_paths "$name" >/dev/null) || err "$name: allow is malformed"
+    (allowed_paths "$name" >/dev/null && allowed_relations "$name" >/dev/null) || err "$name: allow is malformed"
     grep -q "^- \*\*Allowed paths:\*\*" "$dir/AUDIT.md" ||
       err "$name: has an allow file, so AUDIT.md needs an '- **Allowed paths:**' item saying why"
   fi
