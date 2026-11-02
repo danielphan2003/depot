@@ -15,7 +15,8 @@ read it. A version bump without an entry here does not get merged.
   clones the git tag, because `custota-tool/build.rs` runs `git describe`
   and fails outside a git repository. depot keeps the sha256-pinned tarball
   and, in `prepare()`, makes a one-commit local repository tagged `v6.8`, so
-  the version reads `v6.8`. That repository is local only; nothing is
+  the version reads `v6.8` (the tag is annotated, which `git describe`
+  needs). That repository is local only; nothing is
   fetched.
 - **Build:** `cargo fetch --locked`, then an offline `cargo build --frozen
   --release` of `-p custota-tool`. Crates come from crates.io, pinned by

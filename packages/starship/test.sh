@@ -5,4 +5,6 @@ set -eu
 out=$(starship --version)
 echo "starship --version: $out"
 case $out in "starship $DEPOT_VERSION"*) ;; *) exit 1 ;; esac
-STARSHIP_CONFIG=/dev/null starship prompt >/dev/null
+cfg=$(mktemp)
+STARSHIP_CONFIG=$cfg starship prompt >/dev/null
+rm -f "$cfg"

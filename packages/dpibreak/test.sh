@@ -1,10 +1,11 @@
 #!/bin/sh
 # Smoke test, run by scripts/install-test.sh after a clean install from the
 # repository. DEPOT_VERSION is the version from package.env. dpibreak has no
-# --version; its man page carries v<major>.<minor>, which build.rs stamps in.
+# --version, and container images skip man pages, so check the help and that
+# the man page is in the package.
 set -eu
 dpibreak --help | grep -q '^Usage: dpibreak'
-man=/usr/share/man/man1/dpibreak.1
-[ -f "$man" ] || man=$man.gz
-{ zcat -f "$man"; } | grep -q "v${DEPOT_VERSION%.*}"
-echo "dpibreak: --help works, man page for v${DEPOT_VERSION%.*}"
+if command -v pacman >/dev/null; then
+  pacman -Qlq dpibreak | grep -q '/man1/dpibreak\.1'
+fi
+echo "dpibreak $DEPOT_VERSION: --help works"
