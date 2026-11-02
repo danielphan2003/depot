@@ -209,7 +209,8 @@ check_package() {
       zstd -tq "$file" || die "$base: does not decompress"
       [[ $(zstd -dcq "$file" | head -c 262 | tail -c 5 | tr -d '\0' || true) == ustar ]] || die "$base: is not a zstd-compressed tar"
       # Read the entries as libarchive reads them, rewritten as pax, and list
-      # their pax headers with GNU tar, which reads headers only. A grep of
+      # their pax headers with GNU tar (-P: names as they are, so it prints no
+      # notice about them), which reads headers only. A grep of
       # the whole stream also matched file contents: flyctl, a Go binary with
       # archive/tar compiled in, contains "SCHILY.xattr.". An extended
       # attribute, ACL or SELinux label, or any keyword GNU tar does not know
@@ -217,7 +218,7 @@ check_package() {
       tar --version 2>/dev/null | grep -q '^tar (GNU tar)' || die "GNU tar is needed to check $base"
       local pax
       pax=$(bsdtar -cf - --format=pax @"$file" |
-        LC_ALL=C tar --xattrs --xattrs-include='*' --acls --selinux -tvvf - 2>&1 || echo 'tar: listing failed')
+        LC_ALL=C tar -P --xattrs --xattrs-include='*' --acls --selinux -tvvf - 2>&1 || echo 'tar: listing failed')
       bad=$(grep -E '^  [axs]: |^(bsd)?tar: ' <<<"$pax" | sort -u | head -5 || true)
       [[ -z $bad ]] || die "$base: carries extended attributes: $bad"
       ;;
