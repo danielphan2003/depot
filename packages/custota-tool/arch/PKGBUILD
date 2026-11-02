@@ -22,7 +22,8 @@ prepare() {
   git add -A
   git -c user.name=depot -c user.email=depot@invalid -c commit.gpgsign=false \
     commit -qm "Custota v$pkgver tarball"
-  git -c tag.gpgsign=false tag -a -m "v$pkgver" "v$pkgver"
+  git -c user.name=depot -c user.email=depot@invalid -c tag.gpgsign=false \
+    tag -a -m "v$pkgver" "v$pkgver"
   export RUSTUP_TOOLCHAIN=stable
   cargo fetch --locked --target host-tuple
 }
