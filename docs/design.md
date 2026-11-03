@@ -21,6 +21,13 @@ reach the runner's Docker socket. The boundary is the per-job VM, which is
 discarded afterwards, and the absence of secrets in the jobs that run
 upstream code.
 
+Each package builds in a job of its own (2026-11-03, when depot grew past a
+dozen packages). That keeps a target's build within the job time limit, and
+it stops one package's build code from reaching another package's output:
+`collect.sh` takes from a job only packages named after that job's package.
+Before, all of a target's packages built in one job, one after another, so a
+hostile build could have replaced a neighbour's package file.
+
 ## Serve from R2 behind a Worker
 
 The repositories live in the R2 bucket `depot` (APAC). The Worker `depot`

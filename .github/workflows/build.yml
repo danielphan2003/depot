@@ -81,10 +81,54 @@ jobs:
           fi
           echo "code=$code" >>"$GITHUB_OUTPUT"
 
-  build:
-    timeout-minutes: 45
+  # One entry per package and target (scripts/matrix.sh).
+  plan:
+    timeout-minutes: 5
     needs: [lint, changes]
     if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: matrix
+        run: echo "matrix=$(scripts/matrix.sh)" >>"$GITHUB_OUTPUT"
+
+  # Each package builds in a job of its own, so one package's build code
+  # never sees another package's output.
+  build:
+    name: build (${{ matrix.target }}, ${{ matrix.package }})
+    timeout-minutes: 60
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.image }}
+    # Upstream build code runs in this job, so it gets no secrets and a
+    # read-only token.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: scripts/build.sh "$TARGET" out "$PACKAGE"
+        env:
+          TARGET: ${{ matrix.target }}
+          PACKAGE: ${{ matrix.package }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: built-${{ matrix.target }}-${{ matrix.package }}
+          path: out/
+          if-no-files-found: error
+
+  # Gather each target's packages, check them, and sign a test repository
+  # with a throwaway key. Only depot's own scripts run here.
+  repo:
+    timeout-minutes: 20
+    needs: build
     strategy:
       fail-fast: false
       matrix:
@@ -94,13 +138,16 @@ jobs:
           - { target: fedora-44, image: "registry.fedoraproject.org/fedora:44" }
     runs-on: ubuntu-24.04
     container: ${{ matrix.image }}
-    # Upstream build code runs in this job, so it gets no secrets and a
-    # read-only token.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: scripts/build.sh ${{ matrix.target }} out
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: built-${{ matrix.target }}-*
+          path: artifacts
+      - run: scripts/build.sh --prepare ${{ matrix.target }}
+      - run: scripts/collect.sh ${{ matrix.target }} artifacts out
       - run: scripts/test-check-package.sh ${{ matrix.target }} out
       - run: scripts/test-repo.sh ${{ matrix.target }} out repo
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -115,8 +162,8 @@ jobs:
           if-no-files-found: error
 
   test:
-    timeout-minutes: 20
-    needs: build
+    timeout-minutes: 30
+    needs: repo
     strategy:
       fail-fast: false
       matrix:
@@ -140,17 +187,18 @@ jobs:
 
   # The one check the main ruleset requires, so the ruleset does not have to
   # name every matrix job: it passes only if lint passed and, unless the
-  # change is docs only, every build and every test passed.
+  # change is docs only, every build, repository and test job passed.
   ok:
     timeout-minutes: 5
-    needs: [lint, changes, build, test]
+    needs: [lint, changes, plan, build, repo, test]
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - if: >-
           needs.lint.result != 'success' || needs.changes.result != 'success' ||
           (needs.changes.outputs.code == 'true' &&
-          (needs.build.result != 'success' || needs.test.result != 'success'))
+          (needs.plan.result != 'success' || needs.build.result != 'success' ||
+          needs.repo.result != 'success' || needs.test.result != 'success'))
         run: exit 1
       - run: echo "lint passed; build and test passed or were not needed"
 
@@ -216,7 +264,7 @@ jobs:
 
   report:
     timeout-minutes: 10
-    needs: [lint, build, test, publish, verify]
+    needs: [lint, plan, build, repo, test, publish, verify]
     if: >-
       failure() &&
       (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))

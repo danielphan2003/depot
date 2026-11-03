@@ -21,20 +21,21 @@ targets() { echo arch debian-trixie fedora-44; }
 #   recipe    the recipe directory inside packages/<name>/
 #   prefixes  bucket prefixes this target owns (publish.sh replaces them)
 #   repo_dir  where the packages go, relative to the bucket root
+#   image     the container image that builds for it (matrix.sh)
 target_info() {
   case $1 in
     arch)
-      family=arch recipe=arch
+      family=arch recipe=arch image=docker.io/library/archlinux:base-devel
       repo_dir=arch/x86_64
       prefixes=(arch/x86_64/)
       ;;
     debian-trixie)
-      family=debian recipe=debian codename=trixie
+      family=debian recipe=debian codename=trixie image=docker.io/library/debian:trixie
       repo_dir=debian/pool/trixie/main
       prefixes=(debian/dists/trixie/ debian/pool/trixie/)
       ;;
     fedora-44)
-      family=fedora recipe=rpm
+      family=fedora recipe=rpm image=registry.fedoraproject.org/fedora:44
       repo_dir=fedora/44/x86_64
       prefixes=(fedora/44/x86_64/)
       ;;
@@ -207,8 +208,18 @@ check_package() {
       # entries the way libarchive does, is the control that matters.
       zstd -tq "$file" || die "$base: does not decompress"
       [[ $(zstd -dcq "$file" | head -c 262 | tail -c 5 | tr -d '\0' || true) == ustar ]] || die "$base: is not a zstd-compressed tar"
-      # Scan the entries as libarchive reads them, rewritten as pax.
-      bad=$(bsdtar -cf - --format=pax @"$file" | grep -aoE '(SCHILY|LIBARCHIVE)\.xattr\.[!-~]+|RHT\.security\.[!-~]+' | sort -u | head -5 || true)
+      # Read the entries as libarchive reads them, rewritten as pax, and list
+      # their pax headers with GNU tar (-P: names as they are, so it prints no
+      # notice about them), which reads headers only. A grep of
+      # the whole stream also matched file contents: flyctl, a Go binary with
+      # archive/tar compiled in, contains "SCHILY.xattr.". An extended
+      # attribute, ACL or SELinux label, or any keyword GNU tar does not know
+      # (libarchive's own LIBARCHIVE.xattr.*), refuses the package.
+      tar --version 2>/dev/null | grep -q '^tar (GNU tar)' || die "GNU tar is needed to check $base"
+      local pax
+      pax=$(bsdtar -cf - --format=pax @"$file" |
+        LC_ALL=C tar -P --xattrs --xattrs-include='*' --acls --selinux -tvvf - 2>&1 || echo 'tar: listing failed')
+      bad=$(grep -E '^  [axs]: |^(bsd)?tar: ' <<<"$pax" | sort -u | head -5 || true)
       [[ -z $bad ]] || die "$base: carries extended attributes: $bad"
       ;;
     debian)

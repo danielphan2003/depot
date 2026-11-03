@@ -1,0 +1,17 @@
+Source: gitea-tea
+Section: utils
+Priority: optional
+Maintainer: depot <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               golang-1.26-go,
+               ca-certificates,
+Standards-Version: 4.7.2
+Homepage: https://gitea.com/gitea/tea
+Rules-Requires-Root: no
+
+Package: gitea-tea
+Architecture: amd64
+Depends: ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: command-line client for Gitea servers
+ tea, the official Gitea CLI: issues, pull requests, releases and repositories from the terminal. The package is named gitea-tea because Debian's tea is an unrelated text editor. Built by depot from the upstream release.

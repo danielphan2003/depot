@@ -1,0 +1,43 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Reviewed from the AUR PKGBUILD `custota-tool` (aur.git commit a9584de,
+# audited 2026-11-03); see ../AUDIT.md. The AUR clones the git tag because
+# custota-tool's build.rs reads its version from `git describe`. depot builds
+# the sha256-pinned tag tarball instead and gives build.rs a one-commit local
+# repository tagged with the release, so the version reads v<pkgver>.
+pkgname=custota-tool
+pkgver=6.8
+pkgrel=1
+pkgdesc='Generate and sign update metadata for the Custota Android OTA updater'
+arch=('x86_64')
+url='https://github.com/chenxiaolong/Custota'
+license=('GPL-3.0-only')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo' 'git')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('f16c75e827d9bda46cb61b7f07394f45ff1019b77e398a4ded1e25725f943c1c')
+
+prepare() {
+  cd "Custota-$pkgver"
+  git init -q
+  git add -A
+  git -c user.name=depot -c user.email=depot@invalid -c commit.gpgsign=false \
+    commit -qm "Custota v$pkgver tarball"
+  git -c user.name=depot -c user.email=depot@invalid -c tag.gpgsign=false \
+    tag -a -m "v$pkgver" "v$pkgver"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target host-tuple
+}
+
+build() {
+  cd "Custota-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  CFLAGS+=' -ffat-lto-objects'
+  cargo build --frozen --release -p custota-tool
+}
+
+package() {
+  cd "Custota-$pkgver"
+  install -Dm755 target/release/custota-tool -t "$pkgdir/usr/bin"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

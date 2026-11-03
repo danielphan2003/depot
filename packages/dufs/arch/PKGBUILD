@@ -1,0 +1,36 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Reviewed from the AUR PKGBUILD `dufs` (aur.git commit a231524, audited
+# 2026-11-03); see ../AUDIT.md. Kept: the tag tarball and the locked cargo
+# build. Dropped: the systemd units, sysusers, tmpfiles and /etc config (a
+# machine brings its own unit), and the shell completions.
+pkgname=dufs
+pkgver=0.47.0
+pkgrel=1
+pkgdesc='Static file server with uploads, search, access control and WebDAV'
+arch=('x86_64')
+url='https://github.com/sigoden/dufs'
+license=('MIT OR Apache-2.0')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('bab9d4fa1654adc6c88523b61bb8697f575334248cf554282e1f87e2329c0569')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target host-tuple
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  CFLAGS+=' -ffat-lto-objects'
+  cargo build --frozen --release
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 target/release/dufs -t "$pkgdir/usr/bin"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE-MIT LICENSE-APACHE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
