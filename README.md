@@ -39,7 +39,9 @@ breakage is caught.
 | [`dpibreak`](packages/dpibreak) | 0.6.2 | arch | system-wide DPI circumvention |
 | [`dufs`](packages/dufs) | 0.47.0 | arch | small file server |
 | [`ente-cli`](packages/ente-cli) | 0.4.2 | arch | Ente command-line client |
+| [`fcitx5-lotus`](packages/fcitx5-lotus) | 6.0.4 | arch | Vietnamese input method, with its uinput server (see its `allow`) |
 | [`flyctl`](packages/flyctl) | 0.5.2 | arch | Fly.io command-line client |
+| [`freesmlauncher`](packages/freesmlauncher) | 2.3.1 | arch | Minecraft launcher (desktop app, see its `allow`) |
 | [`ghq`](packages/ghq) | 1.11.2 | debian-trixie, fedora-44 | repository manager; Arch ships it |
 | [`gitea-tea`](packages/gitea-tea) | 0.16.0 | debian-trixie, fedora-44 | Gitea CLI (`tea`); Arch ships it as `tea`, Debian's `tea` is an editor |
 | [`lazygit`](packages/lazygit) | 0.66.2 | fedora-44 | git TUI; Arch and Debian ship it |
@@ -53,6 +55,7 @@ Only packages Daniel asked for go in here.
 packages/<name>/
   package.env          upstream version, tarball URL and sha256
   AUDIT.md             what was reviewed, for every version
+  allow                extra paths check_package accepts (optional, approved)
   test.sh              smoke test, run after a clean install
   arch/PKGBUILD        pacman recipe (optional)
   debian/              Debian packaging, binary-only build (optional)
@@ -197,7 +200,11 @@ Install:
   units, `sysusers.d`, `tmpfiles.d`, udev, polkit and dbus files. So
   `check_package` allows only those directories, and refuses links, setuid
   files and file capabilities. Widening that list, for example for shell
-  completions or a systemd unit, needs Daniel's approval.
+  completions or a systemd unit, needs Daniel's approval. An approved
+  exception for one package goes in `packages/<name>/allow`, one
+  `path <regex>` line per file (whole paths, no leading slash), with a
+  comment saying why and an `- **Allowed paths:**` item in `AUDIT.md`.
+  Grant exact files, never a directory such as `usr/lib/systemd/system`.
 
 Upstream change:
 

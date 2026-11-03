@@ -17,6 +17,7 @@ for dir in "$DEPOT_ROOT"/packages/*/; do
   package_env "$name"
   [[ $pkg_sha256 =~ ^[0-9a-f]{64}$ ]] || err "$name: sha256 is not a sha256"
   [[ $pkg_source_url == https://* ]] || err "$name: source_url must be https"
+  [[ $pkg_source_strip =~ ^[1-9]$ ]] || err "$name: source_strip must be a number from 1 to 9"
   [[ $pkg_source_url == *"$pkg_version"* ]] || err "$name: source_url does not contain version $pkg_version"
   [[ -x $dir/test.sh ]] || err "$name: test.sh is missing or not executable"
   if [[ ! -f $dir/AUDIT.md ]]; then
@@ -25,6 +26,11 @@ for dir in "$DEPOT_ROOT"/packages/*/; do
     err "$name: AUDIT.md has no '## $pkg_version-<release>' entry; audit the upstream change first"
   fi
   grep -q "^\[$name\]" "$DEPOT_ROOT/nvchecker.toml" || err "$name: no [$name] entry in nvchecker.toml"
+  if [[ -f $dir/allow ]]; then
+    (allowed_paths "$name" >/dev/null) || err "$name: allow is malformed"
+    grep -q "^- \*\*Allowed paths:\*\*" "$dir/AUDIT.md" ||
+      err "$name: has an allow file, so AUDIT.md needs an '- **Allowed paths:**' item saying why"
+  fi
 
   found=0
   if [[ -f $dir/arch/PKGBUILD ]]; then

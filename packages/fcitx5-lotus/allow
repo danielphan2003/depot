@@ -1,0 +1,27 @@
+# Paths beyond depot's default set that fcitx5-lotus may install
+# (scripts/lib.sh, allowed_paths). Daniel approved them on 2026-11-03.
+# Each pattern is a whole path, an extended regular expression.
+
+# The fcitx5 addon, its input method and addon definitions, and dictionary.
+path usr/lib/fcitx5/liblotus\.so
+path usr/share/fcitx5/(addon|inputmethod)/lotus\.conf
+path usr/share/fcitx5/lotus/vietnamese\.cm\.dict
+
+# The settings GUI (Python) and its menu entry.
+path usr/share/fcitx5-lotus/settings-gui(/[A-Za-z0-9_./-]+)?
+path usr/share/applications/org\.fcitx\.Fcitx5\.Addon\.Lotus\.Settings\.desktop
+path usr/share/metainfo/org\.fcitx\.Fcitx5\.Addon\.Lotus\.metainfo\.xml
+path usr/share/icons/(hicolor/scalable/(apps|status)|breeze(-dark)?/status/(22|24))/(org\.fcitx\.Fcitx5\.)?fcitx-lotus[a-z-]*\.svg
+path usr/share/locale/[A-Za-z_@]+/LC_MESSAGES/fcitx5-lotus\.mo
+
+# The uinput server, which types for the uinput modes. These run as root or
+# grant privileges, so they are listed one by one; AUDIT.md has what each
+# does. The unit runs fcitx5-lotus-server as the uinput_proxy user, in the
+# input group (it reads keyboards), with CAP_SYS_NICE and CAP_SYS_PTRACE.
+path usr/lib/systemd/system/fcitx5-lotus-server@\.service
+# Creates the uinput_proxy system user and adds it to the input group.
+path usr/lib/sysusers.d/lotus\.conf
+# Gives uinput_proxy rw on /dev/uinput (udev runs /usr/bin/setfacl).
+path usr/lib/udev/rules.d/99-lotus\.rules
+# Loads the uinput kernel module at boot.
+path usr/lib/modules-load.d/fcitx5-lotus\.conf

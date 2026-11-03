@@ -57,7 +57,7 @@ packages_for() {
 package_env() {
   local file=$DEPOT_ROOT/packages/$1/package.env key value
   [[ -f $file ]] || die "missing $file"
-  pkg_version='' pkg_source_url='' pkg_sha256='' pkg_upstream=''
+  pkg_version='' pkg_source_url='' pkg_sha256='' pkg_upstream='' pkg_source_strip=1
   while IFS='=' read -r key value; do
     case $key in
       '' | '#'*) ;;
@@ -65,6 +65,7 @@ package_env() {
       source_url) pkg_source_url=$value ;;
       sha256) pkg_sha256=$value ;;
       upstream) pkg_upstream=$value ;;
+      source_strip) pkg_source_strip=$value ;;
       *) die "$file: unknown key $key" ;;
     esac
   done <"$file"
@@ -152,9 +153,11 @@ pkg_dest() {
 #     attributes;
 #   - contain only regular files and directories, with plain names, in
 #     usr/bin, usr/lib{,64}/<name>, usr/share/doc/<name>,
-#     usr/share/licenses/<name> and usr/share/man, all owned by root and
-#     none of them setuid, setgid, group- or world-writable.
-# Anything else needs a deliberate change here, with Daniel's approval.
+#     usr/share/licenses/<name> and usr/share/man, plus the exact paths its
+#     recipe's packages/<name>/allow lists, all owned by root and none of
+#     them setuid, setgid, group- or world-writable.
+# Anything else needs a deliberate change here, or an allow entry, with
+# Daniel's approval.
 check_package() {
   local file=$1 base=${1##*/} name ver names listing owners bad line key
   case $family in
@@ -290,8 +293,48 @@ check_package() {
   # Every path must be under an allowed directory (or be one of its parents).
   local n=${name//./\\.}
   n=${n//+/\\+}
-  bad=$(sed -E 's|^\.?/||; s|/$||' <<<"$names" | grep -vxE "|usr|usr/bin|usr/lib|usr/share|usr/share/(doc|licenses|man)|usr/bin/[^/]+|usr/lib/$n(/.+)?|usr/lib64|usr/lib64/$n(/.+)?|usr/share/(doc|licenses)/$n(/.+)?|usr/share/man/([a-z][a-z](_[A-Z][A-Z])?|[a-z][a-z](_[A-Z][A-Z])?/man[0-9n]|man[0-9n])(/[^/]+)?" || true)
-  [[ -z $bad ]] || die "$base: installs outside usr/bin, usr/lib{,64}/$name, usr/share/{doc,licenses}/$name and usr/share/man: $bad"
+  local paths
+  paths=$(sed -E 's|^\.?/||; s|/$||' <<<"$names")
+  bad=$(grep -vxE "|usr|usr/bin|usr/lib|usr/share|usr/share/(doc|licenses|man)|usr/bin/[^/]+|usr/lib/$n(/.+)?|usr/lib64|usr/lib64/$n(/.+)?|usr/share/(doc|licenses)/$n(/.+)?|usr/share/man/([a-z][a-z](_[A-Z][A-Z])?|[a-z][a-z](_[A-Z][A-Z])?/man[0-9n]|man[0-9n])(/[^/]+)?" <<<"$paths" || true)
+  # Beyond that, only what packages/<name>/allow names (allowed_paths).
+  if [[ -n $bad ]]; then
+    local extra
+    extra=$(allowed_paths "$name")
+    [[ -z $extra ]] || bad=$(grep -vxE "$extra" <<<"$bad" || true)
+    # A parent directory of an allowed entry is allowed too. Each entry under
+    # it is checked on its own, and every directory is root's and not
+    # writable (checked above).
+    local p left=''
+    while IFS= read -r p; do
+      [[ -n $p ]] || continue
+      awk -v p="$p/" 'index($0, p) == 1 { found = 1; exit } END { exit !found }' <<<"$paths" ||
+        left+="$p"$'\n'
+    done <<<"$bad"
+    bad=${left%$'\n'}
+  fi
+  [[ -z $bad ]] || die "$base: installs outside usr/bin, usr/lib{,64}/$name, usr/share/{doc,licenses}/$name, usr/share/man and packages/$name/allow: $bad"
+}
+
+# allowed_paths <name>: the extra paths packages/<name>/allow grants, as one
+# extended regular expression of whole paths (empty if none). The file is a
+# reviewed part of the recipe; nothing in a built package can change it. Each
+# entry is a line `path <ERE>`, matched against the whole path without a
+# leading slash; comments say why. Adding an entry needs Daniel's approval.
+allowed_paths() {
+  local file=$DEPOT_ROOT/packages/$1/allow kind pattern rest out=''
+  [[ -f $file ]] || return 0
+  while read -r kind pattern rest; do
+    case $kind in
+      '' | '#'*) continue ;;
+      path)
+        [[ -n $pattern && -z $rest && $pattern != */ && $pattern =~ ^usr/ ]] ||
+          die "$file: malformed entry: path $pattern $rest"
+        out+="${out:+|}($pattern)"
+        ;;
+      *) die "$file: unknown entry '$kind'" ;;
+    esac
+  done <"$file"
+  printf '%s' "$out"
 }
 
 # Tools the signing and index steps need, installed into a fresh container.

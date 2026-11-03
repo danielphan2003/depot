@@ -8,16 +8,18 @@ Release:        1%{?dist}
 Summary:        Command-line client for Gitea servers
 License:        MIT
 URL:            https://gitea.com/gitea/tea
-Source0:        https://gitea.com/gitea/tea/archive/v%{version}.tar.gz
+# The Go module proxy's copy of the tag; see package.env.
+Source0:        https://proxy.golang.org/gitea.dev/tea/@v/v%{version}.zip
 
 ExclusiveArch:  x86_64
 BuildRequires:  golang >= 1.26
+BuildRequires:  unzip
 
 %description
 tea, the official Gitea CLI: issues, pull requests, releases and repositories from the terminal. Named gitea-tea, as on Debian, where tea is an unrelated editor. Built by depot from the upstream release.
 
 %prep
-%autosetup -n tea
+%autosetup -n gitea.dev/tea@v%{version}
 
 %build
 export GOTOOLCHAIN=local CGO_ENABLED=0

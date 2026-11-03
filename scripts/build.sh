@@ -47,7 +47,7 @@ prepare_debian() {
     "$codename" >/etc/apt/sources.list.d/backports.sources
   apt-get update -q
   apt-get -qy dist-upgrade
-  apt-get -qy install --no-install-recommends build-essential devscripts equivs curl ca-certificates
+  apt-get -qy install --no-install-recommends build-essential devscripts equivs curl ca-certificates libarchive-tools
 }
 
 prepare_fedora() {
@@ -71,7 +71,12 @@ build_debian() {
   tarball=$(fetch_source "$1" "$work")
   src=$work/$1-$pkg_version
   mkdir -p "$src"
-  tar -xf "$tarball" -C "$src" --strip-components=1
+  # A Go module zip nests the tree under <module>@<version>/, so its
+  # package.env sets source_strip to that depth. GNU tar cannot read zips.
+  case $tarball in
+    *.zip) bsdtar -xf "$tarball" -C "$src" --strip-components="$pkg_source_strip" ;;
+    *) tar -xf "$tarball" -C "$src" --strip-components="$pkg_source_strip" ;;
+  esac
   cp -r "$DEPOT_ROOT/packages/$1/debian" "$src/debian"
   (
     cd "$src"
