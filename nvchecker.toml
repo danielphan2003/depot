@@ -26,11 +26,6 @@ github = "chenxiaolong/Custota"
 use_latest_release = true
 prefix = "v"
 
-[difftastic]
-source = "github"
-github = "Wilfred/difftastic"
-use_latest_release = true
-
 [dpibreak]
 source = "github"
 github = "dilluti0n/dpibreak"
@@ -74,12 +69,6 @@ prefix = "v"
 [lazygit]
 source = "github"
 github = "jesseduffield/lazygit"
-use_latest_release = true
-prefix = "v"
-
-[sd]
-source = "github"
-github = "chmln/sd"
 use_latest_release = true
 prefix = "v"
 

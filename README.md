@@ -36,7 +36,6 @@ breakage is caught.
 | [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
 | [`custota-tool`](packages/custota-tool) | 6.8 | arch | signs Custota OTA update metadata |
-| [`difftastic`](packages/difftastic) | 0.72.0 | debian-trixie | structural diff; Arch and Fedora ship it |
 | [`dpibreak`](packages/dpibreak) | 0.6.2 | arch | system-wide DPI circumvention |
 | [`dufs`](packages/dufs) | 0.47.0 | arch | small file server |
 | [`ente-cli`](packages/ente-cli) | 0.4.2 | arch | Ente command-line client |
@@ -44,7 +43,6 @@ breakage is caught.
 | [`ghq`](packages/ghq) | 1.11.2 | debian-trixie, fedora-44 | repository manager; Arch ships it |
 | [`gitea-tea`](packages/gitea-tea) | 0.16.0 | debian-trixie, fedora-44 | Gitea CLI (`tea`); Arch ships it as `tea`, Debian's `tea` is an editor |
 | [`lazygit`](packages/lazygit) | 0.66.2 | fedora-44 | git TUI; Arch and Debian ship it |
-| [`sd`](packages/sd) | 1.1.0 | fedora-44 | find and replace; Arch and Debian ship it |
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
 
 Only packages Daniel asked for go in here.
