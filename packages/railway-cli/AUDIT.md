@@ -26,10 +26,11 @@ read it. A version bump without an entry here does not get merged.
 - **Upstream code read:** `build.rs` only sets `rerun-if-changed` and exports
   the target triple; no network. The tarball also carries `install.sh`,
   `agents.sh`, `v2.sh` and an npm wrapper; the build runs none of them.
-  At run time the CLI talks to Railway's API and, for `railway ssh`, to
-  Railway hosts; it spawns `git`, `ps`, `python3`, `go` and `node` only for
-  the commands that use them (`railway up` with infrastructure-as-code, and
-  telemetry's process-ancestry check).
+  At run time the CLI talks to Railway's API; it spawns `git`, `ps`,
+  `python3`, `go` and `node` for the commands that use them (the
+  infrastructure-as-code evaluators in `src/iac`, and telemetry's
+  process-ancestry check). Only the process spawns were grepped, not every
+  command's behavior.
 - **Telemetry and updates:** telemetry is on by default and is switched off by
   `RAILWAY_NO_TELEMETRY=1` or `DO_NOT_TRACK=1`. The self-updater
   (GitHub releases) is switched off by `RAILWAY_NO_AUTO_UPDATE=1`. A binary
@@ -39,7 +40,7 @@ read it. A version bump without an entry here does not get merged.
 - **Install:** no install script, no units, nothing outside `/usr/bin/railway`,
   the README and the license. `check_package` enforces this on the built
   package.
-- **Upstream status:** active (a release every few days), same owner, not
+- **Upstream status:** active (5.71.0 is the latest release), same owner, not
   archived. Railway disclosed a platform incident in October 2026 that
   exposed customer environment variables; it concerns Railway's servers, not
   the CLI's source or releases.
