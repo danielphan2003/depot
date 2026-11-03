@@ -93,3 +93,9 @@ use_latest_release = true
 source = "github"
 github = "GrimmTheShrimp/run0-sudo-shim"
 use_latest_release = true
+
+[railway-cli]
+source = "github"
+github = "railwayapp/cli"
+use_latest_release = true
+prefix = "v"
