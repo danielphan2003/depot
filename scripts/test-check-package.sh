@@ -85,6 +85,8 @@ test_arch() {
   expect_refused "$(arch_pkg inject 'evil[$(touch /tmp/depot-pwned)] = 1'$'\n')" 'malformed .PKGINFO line'
   expect_refused "$(arch_pkg unspaced $'replaces=sudo\n')" 'malformed .PKGINFO line'
   expect_refused "$(arch_pkg replaces $'replaces = sudo\n')" "key 'replaces' is not allowed"
+  # A relation that no allow file grants.
+  expect_refused "$(arch_pkg provides $'provides = sudo\n')" 'does not grant'
   expect_refused "$(arch_pkg rename $'pkgname = sudo\n')" 'exactly one pkgname'
   expect_refused "$(arch_pkg badname "" "mkdir -p usr/lib/$name; printf x > 'usr/lib/$name/z .Xevil'")" 'whitespace'
   expect_refused "$(arch_pkg hook "" 'mkdir -p usr/share/libalpm/hooks; printf x > usr/share/libalpm/hooks/x.hook')" 'installs outside'
@@ -153,6 +155,19 @@ test_arch() {
     expect_refused "$(arch_pkg allowunit "" 'mkdir -p usr/lib/systemd/system; printf x > usr/lib/systemd/system/evil.service')" 'installs outside'
     expect_refused "$(arch_pkg allowudev "" 'mkdir -p usr/lib/udev/rules.d; printf x > usr/lib/udev/rules.d/00-evil.rules')" 'installs outside'
     expect_refused "$(arch_pkg allowparent "" 'mkdir -p usr/lib/systemd/system/fcitx5-lotus-server@.service.d; printf x > usr/lib/systemd/system/fcitx5-lotus-server@.service.d/x.conf')" 'installs outside'
+    name=$saved
+  fi
+
+  # The shim's allow file grants provides and conflicts on sudo, and nothing
+  # else: not another package's name, nor replaces.
+  if [[ " ${names[*]} " == *" run0-sudo-shim "* ]]; then
+    local saved=$name
+    name=run0-sudo-shim
+    expect_accepted "$(arch_pkg granted $'provides = sudo\nconflict = sudo\n')"
+    expect_refused "$(arch_pkg otherprov $'provides = sudo\nprovides = glibc\n')" "'provides = glibc', which"
+    expect_refused "$(arch_pkg versioned $'provides = sudo=9.9\n')" "'provides = sudo=9.9', which"
+    expect_refused "$(arch_pkg shimreplaces $'replaces = sudo\n')" "key 'replaces' is not allowed"
+    expect_refused "$(arch_pkg pluralkey $'conflicts = sudo\n')" "key 'conflicts' is not allowed"
     name=$saved
   fi
 }

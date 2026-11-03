@@ -1,0 +1,53 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Reviewed from the AUR PKGBUILD `run0-sudo-shim-git` (aur.git commit 1446122,
+# audited 2026-11-03); see ../AUDIT.md. This package is /usr/bin/sudo on
+# bridge: the privilege boundary. Changes from the AUR: the sha256-pinned
+# release tag (the same commit, 9fa985d, the -git package had built) instead
+# of the moving branch; `cargo build --frozen` from upstream's Cargo.lock
+# instead of an unlocked build; run0 and true compiled in by absolute path, so
+# the shim never looks them up in $PATH; upstream's tests run; no shell
+# completions (fish and bash ship their own for sudo).
+#
+# provides=sudo and conflicts=sudo are the only relations any depot package
+# declares; ../allow grants exactly these two (Daniel approved, 2026-11-03).
+pkgname=run0-sudo-shim
+pkgver=1.4.2
+pkgrel=1
+pkgdesc='sudo replacement that runs commands through run0 and polkit'
+arch=('x86_64')
+url='https://github.com/GrimmTheShrimp/run0-sudo-shim'
+license=('BSD-3-Clause')
+depends=('gcc-libs' 'glibc' 'systemd>=256')
+makedepends=('cargo')
+provides=('sudo')
+conflicts=('sudo')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('ddb7e16e95f8f2a3eba2d7cc489919e3a636586b93d41e113778ce3b8caf2f70')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target host-tuple
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  export RUN0=/usr/bin/run0 TRUE=/usr/bin/true
+  cargo build --frozen --release
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  export RUN0=/usr/bin/run0 TRUE=/usr/bin/true
+  cargo test --frozen --release
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 target/release/run0-sudo-shim "$pkgdir/usr/bin/sudo"
+  install -Dm644 target/tmp/run0-sudo-shim/manpage/sudo.8 -t "$pkgdir/usr/share/man/man8"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
