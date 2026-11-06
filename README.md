@@ -262,7 +262,11 @@ Upstream change:
   deletion, no bypass). The signing key is set by hand, never through
   Alchemy, so it never enters Alchemy's state. These were set once with
   `gh api`:
-  - workflows get a read-only token by default and cannot approve pull
-    requests, and every outside contributor's first workflow run waits for
-    approval;
+  - workflows get a read-only token by default, and every outside
+    contributor's first workflow run waits for approval;
+  - workflows may create pull requests (2026-11-06), so `bump.yml` can open
+    its update PRs. GitHub grants this together with approving PRs, which
+    gains nothing here: the ruleset requires no approvals, and only
+    `bump.yml`'s `open-prs` job, which runs depot's own scripts, gets a token
+    that can write pull requests;
   - secret scanning and push protection are on.
