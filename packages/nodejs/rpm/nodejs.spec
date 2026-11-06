@@ -4,6 +4,9 @@
 %global __os_install_post %{nil}
 
 Name:           nodejs
+# Fedora 44's nodejs22 and nodejs24 provide `nodejs` with epoch 1, which outranks any
+# epoch-0 version, so `dnf install nodejs` would pick them over this package.
+Epoch:          2
 Version:        26.13.0
 Release:        1%{?dist}
 Summary:        JavaScript runtime built on V8
@@ -14,7 +17,7 @@ Source0:        https://nodejs.org/dist/v%{version}/node-v%{version}-linux-x64.t
 ExclusiveArch:  x86_64
 
 %description
-Node.js, the newest release line that becomes LTS (even major), with npm. Repackaged by depot from the upstream release binary.
+Node.js, the newest stable release, with npm. Repackaged by depot from the upstream release binary.
 
 %prep
 %autosetup -n node-v%{version}-linux-x64
@@ -48,5 +51,5 @@ install -Dm644 share/man/man1/node.1 -t %{buildroot}%{_mandir}/man1
 %{_mandir}/man1/node.1*
 
 %changelog
-* Fri Nov 06 2026 depot <noreply@github.com> - 26.13.0-1
+* Fri Nov 06 2026 depot <noreply@github.com> - 2:26.13.0-1
 - Upstream release 26.13.0.

@@ -46,7 +46,7 @@ breakage is caught.
 | [`ghq`](packages/ghq) | 1.11.2 | debian-trixie, fedora-44 | repository manager; Arch ships it |
 | [`gitea-tea`](packages/gitea-tea) | 0.16.0 | debian-trixie, fedora-44 | Gitea CLI (`tea`); Arch ships it as `tea`, Debian's `tea` is an editor |
 | [`lazygit`](packages/lazygit) | 0.66.2 | fedora-44 | git TUI; Arch and Debian ship it |
-| [`nodejs`](packages/nodejs) | 26.13.0 | debian-trixie, fedora-44 | Node.js, newest even (LTS-bound) major; upstream's binary |
+| [`nodejs`](packages/nodejs) | 26.13.0 | debian-trixie, fedora-44 | Node.js, newest stable release; upstream's binary |
 | [`nushell`](packages/nushell) | 0.116.1 | debian-trixie, fedora-44 | Daniel's shell; upstream's binary, Fedora's is too old |
 | [`run0-sudo-shim`](packages/run0-sudo-shim) | 1.4.2 | arch | `/usr/bin/sudo` through run0 and polkit; `provides`/`conflicts` sudo (see its `allow`) |
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |

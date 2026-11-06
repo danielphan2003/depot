@@ -11,4 +11,4 @@ Package: nodejs
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: JavaScript runtime built on V8
- Node.js, the newest release line that becomes LTS (even major), with npm. Repackaged by depot from the upstream release binary.
+ Node.js, the newest stable release, with npm. Repackaged by depot from the upstream release binary.
