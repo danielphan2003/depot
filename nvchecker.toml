@@ -106,7 +106,7 @@ github = "oven-sh/bun"
 use_latest_release = true
 prefix = "bun-v"
 
-[nodejs]
+[nodejs-latest]
 # The newest stable release, never an alpha or RC tag. Since Node 27 every
 # major becomes LTS (one a year: stable in April, LTS in October), and a new
 # major spends the six months before that as an alpha (nodejs/Release,

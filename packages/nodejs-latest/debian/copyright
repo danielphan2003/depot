@@ -1,5 +1,5 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: nodejs
+Upstream-Name: nodejs-latest
 Source: https://github.com/nodejs/node
 
 Files: *

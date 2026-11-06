@@ -3,10 +3,7 @@
 %global _build_id_links none
 %global __os_install_post %{nil}
 
-Name:           nodejs
-# Fedora 44's nodejs22 and nodejs24 provide `nodejs` with epoch 1, which outranks any
-# epoch-0 version, so `dnf install nodejs` would pick them over this package.
-Epoch:          2
+Name:           nodejs-latest
 Version:        26.13.0
 Release:        1%{?dist}
 Summary:        JavaScript runtime built on V8
@@ -26,17 +23,17 @@ Node.js, the newest stable release, with npm. Repackaged by depot from the upstr
 
 %install
 install -Dm755 bin/node -t %{buildroot}%{_bindir}
-mkdir -p %{buildroot}%{_prefix}/lib/nodejs
-cp -a lib/node_modules %{buildroot}%{_prefix}/lib/nodejs/
+mkdir -p %{buildroot}%{_prefix}/lib/nodejs-latest
+cp -a lib/node_modules %{buildroot}%{_prefix}/lib/nodejs-latest/
 cat >%{buildroot}%{_bindir}/npm <<'EOF'
 #!/bin/sh
 # Upstream links npm into lib/node_modules; depot packages carry no links.
-exec /usr/bin/node /usr/lib/nodejs/node_modules/npm/bin/npm-cli.js "$@"
+exec /usr/bin/node /usr/lib/nodejs-latest/node_modules/npm/bin/npm-cli.js "$@"
 EOF
 chmod 755 %{buildroot}%{_bindir}/npm
 cat >%{buildroot}%{_bindir}/npx <<'EOF'
 #!/bin/sh
-exec /usr/bin/node /usr/lib/nodejs/node_modules/npm/bin/npx-cli.js "$@"
+exec /usr/bin/node /usr/lib/nodejs-latest/node_modules/npm/bin/npx-cli.js "$@"
 EOF
 chmod 755 %{buildroot}%{_bindir}/npx
 install -Dm644 share/man/man1/node.1 -t %{buildroot}%{_mandir}/man1
@@ -47,9 +44,9 @@ install -Dm644 share/man/man1/node.1 -t %{buildroot}%{_mandir}/man1
 %{_bindir}/node
 %{_bindir}/npm
 %{_bindir}/npx
-%{_prefix}/lib/nodejs
+%{_prefix}/lib/nodejs-latest
 %{_mandir}/man1/node.1*
 
 %changelog
-* Fri Nov 06 2026 depot <noreply@github.com> - 2:26.13.0-1
+* Fri Nov 06 2026 depot <noreply@github.com> - 26.13.0-1
 - Upstream release 26.13.0.
