@@ -3,7 +3,7 @@
 %global debug_package %{nil}
 
 Name:           ghq
-Version:        1.11.2
+Version:        1.12.0
 Release:        1%{?dist}
 Summary:        Remote repository management made easy
 License:        MIT
@@ -35,5 +35,8 @@ install -Dm755 ghq -t %{buildroot}%{_bindir}
 %{_bindir}/ghq
 
 %changelog
+* Fri Nov 06 2026 depot <noreply@github.com> - 1.12.0-1
+- Upstream release 1.12.0.
+
 * Tue Nov 03 2026 depot <noreply@github.com> - 1.11.2-1
 - Upstream release 1.11.2.

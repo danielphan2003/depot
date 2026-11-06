@@ -1,3 +1,9 @@
+ghq (1.12.0-1) unstable; urgency=medium
+
+  * Upstream release 1.12.0.
+
+ -- depot <noreply@github.com>  Fri, 06 Nov 2026 03:55:42 +0000
+
 ghq (1.11.2-1) unstable; urgency=medium
 
   * Upstream release 1.11.2.
