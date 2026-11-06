@@ -34,6 +34,7 @@ breakage is caught.
 | --- | --- | --- | --- |
 | [`age-plugin-fido2-hmac`](packages/age-plugin-fido2-hmac) | 0.5.0 | all | lets age decrypt with a FIDO2 key |
 | [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root |
+| [`bun`](packages/bun) | 1.4.4 | debian-trixie, fedora-44 | JavaScript runtime; upstream's binary, Arch ships it |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
 | [`custota-tool`](packages/custota-tool) | 6.8 | arch | signs Custota OTA update metadata |
 | [`dpibreak`](packages/dpibreak) | 0.6.2 | arch | system-wide DPI circumvention |
@@ -45,10 +46,13 @@ breakage is caught.
 | [`ghq`](packages/ghq) | 1.11.2 | debian-trixie, fedora-44 | repository manager; Arch ships it |
 | [`gitea-tea`](packages/gitea-tea) | 0.16.0 | debian-trixie, fedora-44 | Gitea CLI (`tea`); Arch ships it as `tea`, Debian's `tea` is an editor |
 | [`lazygit`](packages/lazygit) | 0.66.2 | fedora-44 | git TUI; Arch and Debian ship it |
+| [`nodejs`](packages/nodejs) | 26.13.0 | debian-trixie, fedora-44 | Node.js, newest even (LTS-bound) major; upstream's binary |
+| [`nushell`](packages/nushell) | 0.116.1 | debian-trixie, fedora-44 | Daniel's shell; upstream's binary, Fedora's is too old |
 | [`run0-sudo-shim`](packages/run0-sudo-shim) | 1.4.2 | arch | `/usr/bin/sudo` through run0 and polkit; `provides`/`conflicts` sudo (see its `allow`) |
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
+| [`zellij`](packages/zellij) | 0.45.1 | debian-trixie, fedora-44 | terminal multiplexer; upstream's static binary |
 
-Only packages Daniel asked for go in here.
+Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums.
 
 ## Layout
 

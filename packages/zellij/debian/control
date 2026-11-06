@@ -1,0 +1,14 @@
+Source: zellij
+Section: utils
+Priority: optional
+Maintainer: depot <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+Standards-Version: 4.7.2
+Homepage: https://github.com/zellij-org/zellij
+Rules-Requires-Root: no
+
+Package: zellij
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: terminal workspace and multiplexer
+ A terminal multiplexer with layouts, floating panes and a plugin system. Repackaged by depot from the upstream release binary.

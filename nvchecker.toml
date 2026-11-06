@@ -99,3 +99,29 @@ source = "github"
 github = "railwayapp/cli"
 use_latest_release = true
 prefix = "v"
+
+[bun]
+source = "github"
+github = "oven-sh/bun"
+use_latest_release = true
+prefix = "bun-v"
+
+[nodejs]
+# Even majors only: Daniel takes the newest line that becomes LTS (26, not 27).
+source = "github"
+github = "nodejs/node"
+use_max_tag = true
+include_regex = "^v[0-9]*[02468]\\.[0-9]+\\.[0-9]+$"
+prefix = "v"
+
+[nushell]
+source = "github"
+github = "nushell/nushell"
+use_latest_release = true
+
+[zellij]
+source = "github"
+github = "zellij-org/zellij"
+use_latest_release = true
+prefix = "v"
+
