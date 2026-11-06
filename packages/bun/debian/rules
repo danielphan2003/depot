@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+# As ../rpm/bun.spec: upstream's release binary, installed as it is.
+# Nothing is compiled, and the binary is not stripped.
+%:
+	dh $@
+
+override_dh_auto_configure:
+override_dh_auto_build:
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -Dm755 bun -t debian/bun/usr/bin
+	install -Dm755 debian/bunx debian/bun/usr/bin/bunx
+
+override_dh_auto_clean:
+override_dh_dwz:
+override_dh_strip:

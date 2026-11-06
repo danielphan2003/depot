@@ -1,0 +1,14 @@
+Source: bun
+Section: utils
+Priority: optional
+Maintainer: depot <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+Standards-Version: 4.7.2
+Homepage: https://github.com/oven-sh/bun
+Rules-Requires-Root: no
+
+Package: bun
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: javascript runtime, package manager and bundler
+ An all-in-one toolkit for JavaScript and TypeScript: runtime, package manager, test runner and bundler. Repackaged by depot from the upstream release binary.

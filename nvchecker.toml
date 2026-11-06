@@ -99,3 +99,32 @@ source = "github"
 github = "railwayapp/cli"
 use_latest_release = true
 prefix = "v"
+
+[bun]
+source = "github"
+github = "oven-sh/bun"
+use_latest_release = true
+prefix = "bun-v"
+
+[nodejs]
+# The newest stable release, never an alpha or RC tag. Since Node 27 every
+# major becomes LTS (one a year: stable in April, LTS in October), and a new
+# major spends the six months before that as an alpha (nodejs/Release,
+# schedule.json). So this takes 27 once it is stable, on 2027-04-22.
+source = "github"
+github = "nodejs/node"
+use_max_tag = true
+include_regex = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+prefix = "v"
+
+[nushell]
+source = "github"
+github = "nushell/nushell"
+use_latest_release = true
+
+[zellij]
+source = "github"
+github = "zellij-org/zellij"
+use_latest_release = true
+prefix = "v"
+

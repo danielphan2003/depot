@@ -1,0 +1,14 @@
+Source: nushell
+Section: utils
+Priority: optional
+Maintainer: depot <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+Standards-Version: 4.7.2
+Homepage: https://github.com/nushell/nushell
+Rules-Requires-Root: no
+
+Package: nushell
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: a new type of shell
+ A shell whose pipelines carry structured data (tables, records, lists) instead of text. Repackaged by depot from the upstream release binary.

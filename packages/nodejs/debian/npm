@@ -1,0 +1,3 @@
+#!/bin/sh
+# Upstream links npm into lib/node_modules; depot packages carry no links.
+exec /usr/bin/node /usr/lib/nodejs/node_modules/npm/bin/npm-cli.js "$@"

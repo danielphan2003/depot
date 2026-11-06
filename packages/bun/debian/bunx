@@ -1,0 +1,3 @@
+#!/bin/sh
+# bunx is `bun x`. Upstream links it to bun, but depot packages carry no links.
+exec /usr/bin/bun x "$@"
