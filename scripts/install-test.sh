@@ -45,15 +45,15 @@ CONF
     apt-get -qy dist-upgrade
     apt-get -qy install --no-install-recommends ca-certificates
     install -Dm644 "$key" /etc/apt/keyrings/depot.asc
-    if [[ $base == http*://* ]]; then
-      host=${base#*://}
-      host=${host%%/*}
-      cat >/etc/apt/preferences.d/depot.pref <<CONF
+    # Machines pin depot below Debian (factory's add-depot.sh: depot may add
+    # packages, never replace Debian's). Pin by the index's Origin, so the
+    # local test repository gets the same rule as the live one; a package
+    # that shares a name with a Debian package then fails here, not later.
+    cat >/etc/apt/preferences.d/depot.pref <<CONF
 Package: *
-Pin: origin $host
+Pin: release o=depot
 Pin-Priority: 100
 CONF
-    fi
     cat >/etc/apt/sources.list.d/depot.sources <<CONF
 Types: deb
 URIs: $base/debian

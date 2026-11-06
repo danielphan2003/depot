@@ -1,2 +1,0 @@
-#!/bin/sh
-exec /usr/bin/node /usr/lib/nodejs/node_modules/npm/bin/npx-cli.js "$@"

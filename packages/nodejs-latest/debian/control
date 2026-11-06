@@ -1,4 +1,4 @@
-Source: nodejs
+Source: nodejs-latest
 Section: utils
 Priority: optional
 Maintainer: depot <noreply@github.com>
@@ -7,7 +7,7 @@ Standards-Version: 4.7.2
 Homepage: https://github.com/nodejs/node
 Rules-Requires-Root: no
 
-Package: nodejs
+Package: nodejs-latest
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: JavaScript runtime built on V8

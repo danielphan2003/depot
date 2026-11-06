@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+# As ../rpm/nodejs-latest.spec: upstream's release binary, installed as it is.
+# Nothing is compiled, and the binary is not stripped.
+%:
+	dh $@
+
+override_dh_auto_configure:
+override_dh_auto_build:
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -Dm755 bin/node -t debian/nodejs-latest/usr/bin
+	mkdir -p debian/nodejs-latest/usr/lib/nodejs-latest
+	cp -a lib/node_modules debian/nodejs-latest/usr/lib/nodejs-latest/
+	install -Dm755 debian/npm debian/nodejs-latest/usr/bin/npm
+	install -Dm755 debian/npx debian/nodejs-latest/usr/bin/npx
+	install -Dm644 share/man/man1/node.1 -t debian/nodejs-latest/usr/share/man/man1
+
+override_dh_auto_clean:
+override_dh_dwz:
+override_dh_strip:
