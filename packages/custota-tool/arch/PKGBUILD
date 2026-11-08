@@ -5,7 +5,7 @@
 # the sha256-pinned tag tarball instead and gives build.rs a one-commit local
 # repository tagged with the release, so the version reads v<pkgver>.
 pkgname=custota-tool
-pkgver=6.8
+pkgver=6.9
 pkgrel=1
 pkgdesc='Generate and sign update metadata for the Custota Android OTA updater'
 arch=('x86_64')
@@ -14,7 +14,7 @@ license=('GPL-3.0-only')
 depends=('gcc-libs' 'glibc')
 makedepends=('cargo' 'git')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('f16c75e827d9bda46cb61b7f07394f45ff1019b77e398a4ded1e25725f943c1c')
+sha256sums=('2ffddfd60028f45b9193dd4ed6c090972a6a5bb24e740b771dcd04e04bac233e')
 
 prepare() {
   cd "Custota-$pkgver"
