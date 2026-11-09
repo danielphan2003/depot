@@ -37,12 +37,15 @@ defaults:
   run:
     shell: bash
 
-# Every run that can publish (pushes and manual runs on main) shares one
-# group, so publishes happen in commit order and an older run's recipes never
-# drop a newer run's package. The weekly run, which never publishes, has its
-# own, so it cannot replace a push run waiting its turn.
+# Every run that can publish (pushes, and manual runs with publish ticked)
+# shares one group, so publishes happen in commit order and an older run's
+# recipes never drop a newer run's package. Runs that never publish (weekly,
+# manual without publish) have their own, so they cannot replace a push run
+# waiting its turn.
 concurrency:
-  group: build-${{ github.ref }}${{ github.event_name == 'schedule' && '-weekly' || '' }}
+  group: >-
+    build-${{ github.ref }}${{ (github.event_name == 'schedule' ||
+    (github.event_name == 'workflow_dispatch' && !inputs.publish)) && '-nopublish' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -176,10 +179,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Several artifacts land in artifacts/<name>/, but a single one straight
+      # in the path, so a lone package gets its directory named here.
+      # (merge-multiple would let one job's files into another's directory.)
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: built-${{ matrix.target }}-*
-          path: artifacts
+          path: >-
+            ${{ contains(matrix.packages, ' ') && 'artifacts' ||
+            format('artifacts/built-{0}-{1}', matrix.target, matrix.packages) }}
       - run: scripts/build.sh --prepare "$TARGET"
       - run: |
           read -ra pkgs <<<"$PACKAGES"

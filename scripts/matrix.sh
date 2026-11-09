@@ -102,7 +102,7 @@ for t in $(targets); do
   done < <(packages_for)
   # publish.sh cannot publish an empty repository, so the last recipe of a
   # target cannot go without the target.
-  [[ ${#pkgs[@]} -gt 0 || -z ${whole[$t]:-} ]] ||
+  [[ ${#pkgs[@]} -gt 0 || ${#others[@]} -gt 0 ]] ||
     die "$t has no recipes left: remove it from targets() in lib.sh, and its repository from the bucket"
   [[ ${#pkgs[@]} -gt 0 ]] || continue
   log "$t: ${pkgs[*]}"

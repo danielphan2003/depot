@@ -33,15 +33,16 @@ fi
 [[ ${#names[@]} -gt 0 ]] || { log "no packages for $1"; exit 0; }
 
 # only_available: with DEPOT_INSTALL_ONLY, drop the names the repository does
-# not have (a package whose first publish has not run yet), and stop if none
-# are left.
+# not have (a package whose first publish has not run yet). None at all means
+# the repository could not be read: a new target builds everything, so it
+# never gets here.
 only_available() {
   [[ ${DEPOT_INSTALL_ONLY:-} == 1 ]] || return 0
   local name kept=()
   for name in "${names[@]}"; do
     if available "$name"; then kept+=("$name"); else log "$base has no $name; not installing it"; fi
   done
-  [[ ${#kept[@]} -gt 0 ]] || { log "none of them are at $base"; exit 0; }
+  [[ ${#kept[@]} -gt 0 ]] || die "none of ${names[*]} are at $base; is it reachable?"
   names=("${kept[@]}")
 }
 
@@ -96,7 +97,9 @@ Components: main
 Architectures: amd64
 Signed-By: /etc/apt/keyrings/depot.asc
 CONF
-    apt-get update -q
+    # --error-on=any: a depot index that cannot be fetched fails here, not
+    # as packages that seem to be missing.
+    apt-get update -q --error-on=any
     available() { apt-cache madison "$1" | grep -qF " $base/debian "; }
     only_available
     apt-get -qy install --no-install-recommends "${names[@]}"
@@ -115,8 +118,9 @@ repo_gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-depot
 includepkgs=${names[*]}
 CONF
-    # -y: the first query imports the repository key.
-    available() { [[ -n $(dnf -y -q repoquery --repo depot "$1" 2>/dev/null) ]]; }
+    # Fails when the repository cannot be read, and imports its key (-y).
+    dnf -y makecache --repo depot
+    available() { [[ -n $(dnf -y -q repoquery --repo depot "$1") ]]; }
     only_available
     dnf -y install "${names[@]}"
     files() { rpm -ql "$1"; }

@@ -111,9 +111,13 @@ A package builds for every target whose recipe directory exists.
      package name. It runs `scripts/test-check-package.sh`, which feeds
      `check_package` crafted hostile packages and the real ones, then signs
      a test repository with a throwaway key.
-   - `test` installs the packages this run built from that test repository
-     into a fresh container. It runs each `test.sh` and fails if a binary
-     has a missing library.
+   - `test` installs the target's other packages from the live URL into a
+     fresh container, then the packages this run built from that test
+     repository, so a file clash with a published package fails here. It
+     runs each `test.sh` and fails if a binary has a missing library. If the
+     live repository cannot be read, or one of its packages no longer
+     installs (what the canary reports), the test fails too, until that is
+     fixed.
    - `publish` (pushes to `main`, or a manual run with `publish` ticked) signs with the real key and uploads,
      for each target this run built. Packages it did not build stay as published.
      A package file that is already published is never replaced (only a
