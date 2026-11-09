@@ -57,7 +57,8 @@ export default Alchemy.Stack(
     })
 
     // Every change to main goes through a pull request whose `ok` check (lint,
-    // every build and every test) passed. No bypass, admins included.
+    // and every build and test the change affects) passed. No bypass, admins
+    // included.
     yield* GitHub.Ruleset("Main", {
       ...repo,
       name: "main",

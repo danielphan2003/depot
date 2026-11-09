@@ -12,8 +12,9 @@ readonly DEPOT_ROOT DEPOT_URL
 log() { printf '==> %s\n' "$*" >&2; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
-# The distributions depot builds for. Adding one means a case below, a row in
-# the workflow matrices, and a line in the README's target table.
+# The distributions depot builds for. Adding one means a case below (the
+# workflow's matrices come from it, through matrix.sh) and a line in the
+# README's target table.
 targets() { echo arch debian-trixie fedora-44; }
 
 # target_info <target> sets:
@@ -22,20 +23,26 @@ targets() { echo arch debian-trixie fedora-44; }
 #   prefixes  bucket prefixes this target owns (publish.sh replaces them)
 #   repo_dir  where the packages go, relative to the bucket root
 #   image     the container image that builds for it (matrix.sh)
+#   run_images  the images that install it: the first also signs and
+#             publishes it, every one install-tests it (matrix.sh)
 target_info() {
   case $1 in
     arch)
       family=arch recipe=arch image=docker.io/library/archlinux:base-devel
+      # CachyOS uses the Arch repository too.
+      run_images=(docker.io/library/archlinux:latest docker.io/cachyos/cachyos-v3:latest)
       repo_dir=arch/x86_64
       prefixes=(arch/x86_64/)
       ;;
     debian-trixie)
       family=debian recipe=debian codename=trixie image=docker.io/library/debian:trixie
+      run_images=(docker.io/library/debian:trixie)
       repo_dir=debian/pool/trixie/main
       prefixes=(debian/dists/trixie/ debian/pool/trixie/)
       ;;
     fedora-44)
       family=fedora recipe=rpm image=registry.fedoraproject.org/fedora:44
+      run_images=(registry.fedoraproject.org/fedora:44)
       repo_dir=fedora/44/x86_64
       prefixes=(fedora/44/x86_64/)
       ;;

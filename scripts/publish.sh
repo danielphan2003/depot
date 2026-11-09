@@ -6,6 +6,9 @@
 # DEPOT_UPLOAD_TOKEN (the Worker's bearer token) in the environment, and the
 # tools from repo-tools.sh, installed in an earlier step without them.
 #
+# <pkgdir> holds what this run built, which may be only the packages a change
+# touched: every other published package stays as it is.
+#
 # Published files are immutable: a package file whose name is already in the
 # bucket is kept, and the new build of it is dropped. Changing a published
 # package therefore needs a new version or release (scripts/bump-release.sh).
@@ -112,6 +115,11 @@ if [[ $family == debian && -n ${remote[debian/dists/$codename/InRelease]:-} ]]; 
   rm -f "$root/$dist/InRelease" "$root/$dist/main/binary-amd64/Packages"
 fi
 
+# Packages with a recipe for this target. A published package not in here is
+# dropped (step 1), even when this run built only some of the others.
+declare -A recipes
+while read -r name; do recipes[$name]=1; done < <(packages_for)
+
 declare -A withdrawn matched
 for f in ${DEPOT_WITHDRAW:-}; do
   [[ $f =~ ^[A-Za-z0-9._+~:-]+$ ]] || die "DEPOT_WITHDRAW: not a file name: $f"
@@ -146,6 +154,17 @@ for k in "${!remote[@]}"; do
         die "$k does not verify against the trusted keys"
       ;;
   esac
+  # A package whose recipe for this target is gone is dropped here, before
+  # check_package refuses its name: it is never signed or listed again, and
+  # the sync below deletes it.
+  name=''
+  read -r name _ < <(pkg_meta "$family" "$root/$k") || true
+  [[ -n $name ]] || die "$k: cannot read its package name"
+  if [[ -z ${recipes[$name]:-} ]]; then
+    log "dropping $k: $name has no recipe for $target any more"
+    rm -f "$root/$k" "$root/$k.sig"
+    continue
+  fi
   check_package "$root/$k"
 done
 
@@ -180,11 +199,12 @@ for f in "${!withdrawn[@]}"; do
   [[ -n ${matched[$f]:-} ]] || log "warning: withdraw: $f is not in $target's repository (typo, or another target?)"
 done
 
-# 3. Prune: drop packages without a recipe, keep the newest $keep versions.
+# 3. Prune: drop packages without a recipe for this target, keep the newest
+# $keep versions. A package this run did not build keeps its published files.
 declare -A versions
 while IFS= read -r -d '' file; do
   read -r name ver < <(pkg_meta "$family" "$file")
-  if [[ -z ${built_names[$name]:-} ]]; then
+  if [[ -z ${recipes[$name]:-} ]]; then
     log "dropping $file: $name has no recipe any more"
     rm -f "$file" "$file.sig"
     continue
