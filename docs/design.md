@@ -28,6 +28,17 @@ it stops one package's build code from reaching another package's output:
 Before, all of a target's packages built in one job, one after another, so a
 hostile build could have replaced a neighbour's package file.
 
+A run builds only the packages its change affects (2026-11-09,
+`scripts/matrix.sh`), so a version bump takes minutes instead of the 25 a
+full build took. The weekly run still rebuilds everything against the
+current distributions, and the daily canary installs what is published. No
+build output is cached between jobs or runs: any job in a run on `main` could
+write any cache key, so one package's build could seed another's. Builds no
+longer wait for `lint`. So a bump PR builds the new upstream version as soon
+as it opens, before its `AUDIT.md` entry exists. That code runs in the same
+secret-less, disposable VM as any other build, and `ok` and `publish` still
+need `lint`.
+
 ## Serve from R2 behind a Worker
 
 The repositories live in the R2 bucket `depot` (APAC). The Worker `depot`

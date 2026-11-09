@@ -9,11 +9,13 @@
 #            installs it: {target, image, packages}.
 #
 # With <base>, a commit, only what the change from <base> to HEAD can affect
-# builds: a file under packages/<name>/arch/, debian/ or rpm/ builds <name>
-# for that target, any other file of packages/<name>/ builds <name> for every
-# target it has a recipe for, and docs and files that no build reads build
-# nothing. Any other file builds everything, and so does a <base> that cannot
-# be diffed. Without <base>, everything builds.
+# builds: a file in a recipe directory (packages/<name>/arch/, debian/ or
+# rpm/, lib.sh's target_info) builds <name> for the targets that use it, any
+# other file of packages/<name>/ builds <name> for every target it has a
+# recipe for, and docs and files that no build reads build nothing. Removing
+# a recipe builds its whole target, so publish.sh drops the package from that
+# repository in the same run. Any other file builds everything, and so does a
+# <base> that cannot be diffed. Without <base>, everything builds.
 #
 # GitHub starts only so many jobs at once, so the build entries come longest
 # first, by the seconds in $DEPOT_DURATIONS (lines "<target> <package>
@@ -23,9 +25,15 @@ source "$(dirname "$0")/lib.sh"
 [[ $# -le 1 ]] || die "usage: matrix.sh [<base>]"
 
 all=1
-declare -A want=()
+declare -A want=() whole=() by_recipe=()
+for t in $(targets); do
+  target_info "$t"
+  by_recipe[$recipe]+="$t "
+done
 if [[ $# -eq 1 ]]; then
-  if files=$(git -C "$DEPOT_ROOT" diff --name-only "$1...HEAD" 2>/dev/null); then
+  # --no-renames: a rename must also show the path it removed.
+  if mb=$(git -C "$DEPOT_ROOT" merge-base "$1" HEAD 2>/dev/null) &&
+    files=$(git -C "$DEPOT_ROOT" diff --no-renames --name-only "$mb" HEAD 2>/dev/null); then
     all=0
   else
     log "cannot diff $1...HEAD; building everything"
@@ -45,12 +53,12 @@ if [[ $all -eq 0 ]]; then
       packages/*/*)
         rest=${f#packages/}
         name=${rest%%/*}
-        case ${rest#*/} in
-          arch/*) want["arch $name"]=1 ;;
-          debian/*) want["debian-trixie $name"]=1 ;;
-          rpm/*) want["fedora-44 $name"]=1 ;;
-          *) for t in $(targets); do want["$t $name"]=1; done ;;
-        esac
+        sub=${rest#*/}
+        if [[ $sub == */* && -n ${by_recipe[${sub%%/*}]:-} ]]; then
+          for t in ${by_recipe[${sub%%/*}]}; do want["$t $name"]=1; done
+        else
+          for t in $(targets); do want["$t $name"]=1; done
+        fi
         ;;
       *)
         log "$f can affect every build; building everything"
@@ -59,6 +67,19 @@ if [[ $all -eq 0 ]]; then
         ;;
     esac
   done <<<"$files"
+fi
+
+if [[ $all -eq 0 ]]; then
+  for key in "${!want[@]}"; do
+    t=${key%% *}
+    name=${key#* }
+    target_info "$t"
+    if [[ ! -e $DEPOT_ROOT/packages/$name/$recipe ]] &&
+      git -C "$DEPOT_ROOT" cat-file -e "$mb:packages/$name/$recipe" 2>/dev/null; then
+      log "$name no longer has a recipe for $t; building all of $t"
+      whole[$t]=1
+    fi
+  done
 fi
 
 declare -A seconds=()
@@ -72,7 +93,7 @@ for t in $(targets); do
   target_info "$t"
   pkgs=()
   while read -r name; do
-    [[ $all -eq 1 || -n ${want["$t $name"]:-} ]] && pkgs+=("$name")
+    [[ $all -eq 1 || -n ${whole[$t]:-} || -n ${want["$t $name"]:-} ]] && pkgs+=("$name")
   done < <(packages_for)
   [[ ${#pkgs[@]} -gt 0 ]] || continue
   log "$t: ${pkgs[*]}"

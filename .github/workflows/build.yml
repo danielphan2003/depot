@@ -31,8 +31,10 @@ on:
 permissions:
   contents: read
 
+# Per event, so the weekly or a manual run never replaces a push run that is
+# waiting its turn on main. publish has its own group per target.
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -244,7 +246,8 @@ jobs:
   publish:
     name: publish (${{ matrix.target }})
     timeout-minutes: 20
-    needs: [plan, test]
+    # lint too: main's squash commit is a tree no pull request run linted.
+    needs: [lint, plan, test]
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish))

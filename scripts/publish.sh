@@ -115,6 +115,11 @@ if [[ $family == debian && -n ${remote[debian/dists/$codename/InRelease]:-} ]]; 
   rm -f "$root/$dist/InRelease" "$root/$dist/main/binary-amd64/Packages"
 fi
 
+# Packages with a recipe for this target. A published package not in here is
+# dropped (step 1), even when this run built only some of the others.
+declare -A recipes
+while read -r name; do recipes[$name]=1; done < <(packages_for)
+
 declare -A withdrawn matched
 for f in ${DEPOT_WITHDRAW:-}; do
   [[ $f =~ ^[A-Za-z0-9._+~:-]+$ ]] || die "DEPOT_WITHDRAW: not a file name: $f"
@@ -149,6 +154,15 @@ for k in "${!remote[@]}"; do
         die "$k does not verify against the trusted keys"
       ;;
   esac
+  # A package whose recipe for this target is gone is dropped here, before
+  # check_package refuses its name: it is never signed or listed again, and
+  # the sync below deletes it.
+  read -r name _ < <(pkg_meta "$family" "$root/$k")
+  if [[ -z ${recipes[$name]:-} ]]; then
+    log "dropping $k: $name has no recipe for $target any more"
+    rm -f "$root/$k" "$root/$k.sig"
+    continue
+  fi
   check_package "$root/$k"
 done
 
@@ -185,8 +199,6 @@ done
 
 # 3. Prune: drop packages without a recipe for this target, keep the newest
 # $keep versions. A package this run did not build keeps its published files.
-declare -A recipes
-while read -r name; do recipes[$name]=1; done < <(packages_for)
 declare -A versions
 while IFS= read -r -d '' file; do
   read -r name ver < <(pkg_meta "$family" "$file")

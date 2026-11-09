@@ -12,8 +12,9 @@ readonly DEPOT_ROOT DEPOT_URL
 log() { printf '==> %s\n' "$*" >&2; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
-# The distributions depot builds for. Adding one means a case below, a row in
-# the workflow matrices, and a line in the README's target table.
+# The distributions depot builds for. Adding one means a case below (the
+# workflow's matrices come from it, through matrix.sh) and a line in the
+# README's target table.
 targets() { echo arch debian-trixie fedora-44; }
 
 # target_info <target> sets:
