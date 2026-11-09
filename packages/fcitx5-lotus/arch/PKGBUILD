@@ -10,7 +10,7 @@
 # The package installs root-level integration that depot normally refuses;
 # ../allow lists each path (Daniel approved, 2026-11-03).
 pkgname=fcitx5-lotus
-pkgver=6.0.4
+pkgver=6.0.7
 pkgrel=1
 pkgdesc='Vietnamese input method for fcitx5'
 arch=('x86_64')
@@ -21,7 +21,7 @@ depends=('acl' 'dbus' 'fcitx5' 'fcitx5-configtool' 'fcitx5-gtk' 'fcitx5-qt'
   'libudev.so' 'python' 'python-dbus' 'python-pyqt6' 'python-qtpy')
 makedepends=('cmake' 'extra-cmake-modules' 'ninja')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('01aab5d583d801e577c8985aa00f1bb3a8ca346a6769bd0f439ef675d2d6b89c')
+sha256sums=('9abf704c0bc895ab041a600e4fa4f99e4cec799d01f519560520ce95a2426692')
 
 build() {
   cmake -S "$pkgname-$pkgver" -B build -G Ninja \
