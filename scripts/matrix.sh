@@ -14,6 +14,10 @@
 # target it has a recipe for, and docs and files that no build reads build
 # nothing. Any other file builds everything, and so does a <base> that cannot
 # be diffed. Without <base>, everything builds.
+#
+# GitHub starts only so many jobs at once, so the build entries come longest
+# first, by the seconds in $DEPOT_DURATIONS (lines "<target> <package>
+# <seconds>", from earlier runs). A build with no recorded time goes first.
 source "$(dirname "$0")/lib.sh"
 
 [[ $# -le 1 ]] || die "usage: matrix.sh [<base>]"
@@ -57,6 +61,13 @@ if [[ $all -eq 0 ]]; then
   done <<<"$files"
 fi
 
+declare -A seconds=()
+if [[ -n ${DEPOT_DURATIONS:-} && -f $DEPOT_DURATIONS ]]; then
+  while read -r t name secs; do
+    [[ $secs =~ ^[0-9]+$ ]] && seconds["$t $name"]=$secs
+  done <"$DEPOT_DURATIONS"
+fi
+
 for t in $(targets); do
   target_info "$t"
   pkgs=()
@@ -67,7 +78,8 @@ for t in $(targets); do
   log "$t: ${pkgs[*]}"
   for name in "${pkgs[@]}"; do
     jq -cn --arg target "$t" --arg image "$image" --arg package "$name" \
-      '{job: "build", target: $target, image: $image, package: $package}'
+      --argjson seconds "${seconds["$t $name"]:-1000000}" \
+      '{job: "build", target: $target, image: $image, package: $package, seconds: $seconds}'
   done
   jq -cn --arg target "$t" --arg image "$image" --arg packages "${pkgs[*]}" \
     '{job: "repo", target: $target, image: $image, packages: $packages}'
@@ -78,7 +90,7 @@ for t in $(targets); do
       '{job: "test", target: $target, image: $image, packages: $packages}'
   done
 done | jq -cs '{
-  build: map(select(.job == "build") | del(.job)),
+  build: map(select(.job == "build")) | sort_by(-.seconds) | map(del(.job, .seconds)),
   repo: map(select(.job == "repo") | del(.job)),
   publish: map(select(.job == "publish") | del(.job)),
   test: map(select(.job == "test") | del(.job))

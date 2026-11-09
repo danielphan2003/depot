@@ -106,6 +106,9 @@ jobs:
               ;;
           esac
           echo "base: ${base:-none, so everything builds}"
+          # Recent build times, so matrix.sh starts the longest builds first.
+          export DEPOT_DURATIONS=$RUNNER_TEMP/durations
+          scripts/durations.sh "$REPO" >"$DEPOT_DURATIONS" || true
           matrix=$(scripts/matrix.sh ${base:+"$base"})
           for key in build repo publish test; do
             echo "$key=$(jq -c ".$key" <<<"$matrix")" >>"$GITHUB_OUTPUT"
@@ -141,6 +144,8 @@ jobs:
           name: built-${{ matrix.target }}-${{ matrix.package }}
           path: out/
           if-no-files-found: error
+          # Package files are compressed already.
+          compression-level: 0
 
   # Gather each target's packages, check them, and sign a test repository
   # with a throwaway key. Only depot's own scripts run here.
@@ -176,11 +181,15 @@ jobs:
           name: packages-${{ matrix.target }}
           path: out/
           if-no-files-found: error
+          # Package files are compressed already.
+          compression-level: 0
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-repo-${{ matrix.target }}
           path: repo/
           if-no-files-found: error
+          # Package files are compressed already.
+          compression-level: 0
 
   # Install what this run built from the test repository, in each image that
   # installs the target (lib.sh's run_images: Arch and CachyOS for arch).

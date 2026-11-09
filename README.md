@@ -102,6 +102,8 @@ A package builds for every target whose recipe directory exists.
      another's output. Builds skip debug info, which depot does not ship:
      makepkg runs with `!debug` and `make -j$(nproc)`, and Fedora's Rust
      flags drop `-Cdebuginfo=2 -Ccodegen-units=1` for cargo's defaults.
+     GitHub starts only 20 jobs at once here, so the longest builds start
+     first, by their times in recent runs (`scripts/durations.sh`).
    - `repo` gathers each target's packages with `scripts/collect.sh`, which
      refuses a job's output unless every package in it has that job's
      package name. It runs `scripts/test-check-package.sh`, which feeds
