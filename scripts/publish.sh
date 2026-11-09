@@ -157,7 +157,9 @@ for k in "${!remote[@]}"; do
   # A package whose recipe for this target is gone is dropped here, before
   # check_package refuses its name: it is never signed or listed again, and
   # the sync below deletes it.
-  read -r name _ < <(pkg_meta "$family" "$root/$k")
+  name=''
+  read -r name _ < <(pkg_meta "$family" "$root/$k") || true
+  [[ -n $name ]] || die "$k: cannot read its package name"
   if [[ -z ${recipes[$name]:-} ]]; then
     log "dropping $k: $name has no recipe for $target any more"
     rm -f "$root/$k" "$root/$k.sig"

@@ -84,8 +84,10 @@ A package builds for every target whose recipe directory exists.
 1. `build.yml` runs on every pull request, on pushes to `main`, and weekly.
    It builds only what a change can affect (`scripts/matrix.sh`): a file
    under `packages/<name>/arch/`, `debian/` or `rpm/` builds that package
-   for that target, and any other file of `packages/<name>/` builds it for
-   all of its targets. A change to the shared scripts or the workflow
+   for that target, and any other file of `packages/<name>/` (except
+   `*.md`, such as `AUDIT.md`) builds it for all of its targets. Removing a
+   recipe builds that whole target, so the same run drops the package from
+   its repository. A change to the shared scripts or the workflow
    builds everything, as do the weekly run and a manual run on `main`. A
    pull request is compared with its base, a push to `main` with the last
    push whose run passed (so nothing a failed run missed goes unpublished),
