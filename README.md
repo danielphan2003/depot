@@ -37,7 +37,7 @@ breakage is caught.
 | [`bun`](packages/bun) | 1.4.4 | debian-trixie, fedora-44 | JavaScript runtime; upstream's binary, Arch ships it |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
 | [`custota-tool`](packages/custota-tool) | 6.8 | arch | signs Custota OTA update metadata |
-| [`dpibreak`](packages/dpibreak) | 0.6.2 | arch | system-wide DPI circumvention |
+| [`dpibreak`](packages/dpibreak) | 0.6.2 | arch, fedora-44 | system-wide DPI circumvention |
 | [`dufs`](packages/dufs) | 0.47.0 | arch | small file server |
 | [`ente-cli`](packages/ente-cli) | 0.4.2 | arch | Ente command-line client |
 | [`fcitx5-lotus`](packages/fcitx5-lotus) | 6.0.4 | arch | Vietnamese input method, with its uinput server (see its `allow`) |

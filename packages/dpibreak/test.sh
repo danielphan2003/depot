@@ -7,5 +7,7 @@ set -eu
 dpibreak --help | grep -q '^Usage: dpibreak'
 if command -v pacman >/dev/null; then
   pacman -Qlq dpibreak | grep -q '/man1/dpibreak\.1'
+elif command -v rpm >/dev/null; then
+  rpm -ql dpibreak | grep -q '/man1/dpibreak\.1'
 fi
 echo "dpibreak $DEPOT_VERSION: --help works"

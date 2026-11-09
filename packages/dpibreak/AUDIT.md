@@ -3,6 +3,33 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.6.2-1, fedora-44 (2026-11-09)
+
+- **Why:** the always-on Fedora Atomic server needs the same circumvention
+  as the Arch desktop: its ISP's filtering resets connections to some HTTPS
+  hostnames, and dpibreak's default mode gets through.
+- **Source and version:** unchanged, the 0.6.2 tag tarball with the same
+  sha256 as the Arch recipe. The version stays in step with
+  `package.env`.
+- **Recipe:** written for depot on the model of `railway-cli` and
+  `starship`: `cargo build --locked --release` with Fedora's Rust flags.
+  `Cargo.lock` has 108 sourced entries, all `registry+crates.io`, no git
+  dependencies. `Cargo.toml` asks for Rust 1.88 and edition 2024. The
+  tag tarball does not carry the rendered man page; `build.rs` writes
+  `dpibreak.1` into the source directory from `dpibreak.1.in` and
+  `src/opt.rs`, and the spec installs that.
+- **Install:** `/usr/bin/dpibreak`, the man page, the README and
+  `COPYING`. No scriptlets, no unit, no capabilities, no setuid. The
+  machine's own unit runs it as root (it needs `CAP_NET_ADMIN` for the
+  nftables rules and the NFQUEUE). `Requires: nftables` because it shells
+  out to `nft`.
+- **Run-time behaviour checked:** with upstream's signed musl release
+  binary (checksum matched `sha256sum.txt`) a default run added one
+  nftables table, `inet dpibreak`, and removed it on SIGTERM. Ordinary
+  HTTPS (Google, GitHub, depot) and the tailnet were unaffected while it
+  ran. It handles TLS only: plain HTTP and QUIC are untouched.
+- **Reviewed by:** Claude (Sonnet 5.5) for Daniel, 2026-11-09.
+
 ## 0.6.2-1 (2026-11-03)
 
 - **Why depot ships it:** system-wide DPI circumvention; `dpibreak.service`
