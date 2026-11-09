@@ -60,7 +60,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # gh checks the attestations of upstream binaries (package.env attest=).
       - run: scripts/lint.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
       - uses: docker://rhysd/actionlint@sha256:1d74bfc9fd1963af8f89a7c22afaaafd42f49aad711a09951d02cb996398f61d # 1.7.7
         with:
           args: -color

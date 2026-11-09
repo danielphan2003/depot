@@ -7,6 +7,43 @@ source "$(dirname "$0")/lib.sh"
 errors=0
 err() { printf 'lint: %s\n' "$*" >&2; errors=$((errors + 1)); }
 
+# check_attestation <name>: package.env's attest= says source_url is
+# upstream's release binary and names the GitHub attestation it carries.
+# Check that attestation for the pinned file (call package_env first):
+#   release           GitHub's immutable-release attestation: the file is the
+#                     unchanged asset upstream published with that tag.
+#   build:<workflow>  SLSA build provenance, signed by that workflow file in
+#                     upstream's repository, run for that tag.
+# Needs gh; CI has it, and a local run without it skips the check.
+check_attestation() {
+  local name=$1 repo tag file dir ok=0
+  if [[ ! $pkg_source_url =~ ^https://github\.com/([^/]+/[^/]+)/releases/download/([^/]+)/([^/]+)$ ]]; then
+    err "$name: attest= needs a GitHub release asset as source_url"
+    return
+  fi
+  repo=${BASH_REMATCH[1]} tag=${BASH_REMATCH[2]} file=${BASH_REMATCH[3]}
+  [[ $pkg_attest == release || $pkg_attest =~ ^build:\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml$ ]] ||
+    { err "$name: attest must be 'release' or 'build:.github/workflows/<file>'"; return; }
+  if ! command -v gh >/dev/null; then
+    if [[ -n ${CI:-} ]]; then err "$name: gh is needed to check its attestation"; else log "gh not installed; $name's attestation not checked"; fi
+    return
+  fi
+  dir=$(mktemp -d)
+  # fetch_source checks the pinned sha256, so the attestation is checked for
+  # exactly the file the build packages.
+  if (fetch_source "$name" "$dir" >/dev/null); then
+    case $pkg_attest in
+      release) gh release verify-asset "$tag" "$dir/$file" -R "$repo" >/dev/null && ok=1 ;;
+      build:*)
+        gh attestation verify "$dir/$file" --repo "$repo" --signer-workflow "$repo/${pkg_attest#build:}" \
+          --source-ref "refs/tags/$tag" >/dev/null && ok=1
+        ;;
+    esac
+  fi
+  rm -rf "$dir"
+  [[ $ok -eq 1 ]] || err "$name: $file does not carry a valid '$pkg_attest' attestation from $repo"
+}
+
 for dir in "$DEPOT_ROOT"/packages/*/; do
   name=$(basename "$dir")
   env=$dir/package.env
@@ -19,6 +56,7 @@ for dir in "$DEPOT_ROOT"/packages/*/; do
   [[ $pkg_source_url == https://* ]] || err "$name: source_url must be https"
   [[ $pkg_source_strip =~ ^[0-9]$ ]] || err "$name: source_strip must be a number from 0 to 9"
   [[ $pkg_source_url == *"$pkg_version"* ]] || err "$name: source_url does not contain version $pkg_version"
+  [[ -z $pkg_attest ]] || check_attestation "$name"
   [[ -x $dir/test.sh ]] || err "$name: test.sh is missing or not executable"
   if [[ ! -f $dir/AUDIT.md ]]; then
     err "$name: AUDIT.md is missing"

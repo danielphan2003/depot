@@ -3,6 +3,33 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 5.71.0-2 (2026-11-09)
+
+- **Change:** upstream's release binary instead of a source build (Daniel,
+  2026-11-09: a package whose upstream binary carries a GitHub attestation
+  uses that binary). The version, and so the upstream code, is the one
+  audited in 5.71.0-1 below.
+- **Source:**
+  `https://github.com/railwayapp/cli/releases/download/v5.71.0/railway-v5.71.0-x86_64-unknown-linux-musl.tar.gz`,
+  sha256 `2e682fd2ddf8d6fdf9e46d9d99d99646ff0022a6abb0c2bca93011348a269fb9`:
+  the `railway` binary alone.
+- **Attestation:** GitHub's immutable-release attestation
+  (`https://in-toto.io/attestation/release/v0.2`) lists this file, by
+  sha256, as an asset of release `v5.71.0` in `railwayapp/cli`. `lint.sh`
+  checks it with `gh release verify-asset` on every run. It proves the file
+  is the unchanged asset upstream published with that tag. It does not prove
+  upstream's CI built it from the tag's source: Daniel accepted that on
+  2026-11-09 (any GitHub attestation counts).
+- **Binary:** static-pie (musl), x86-64, stripped by upstream: no shared
+  libraries, so no runtime dependencies on any target. It is built with
+  upstream's own release profile (`lto = "fat"`, `opt-level = "z"`), not the
+  distributions' flags. The musl build was chosen over `linux-gnu`, which is
+  attested too, so a glibc on the target can never be too old.
+- **Install:** `/usr/bin/railway` only; the tarball carries no README or
+  license file. `check_package` enforces it. The telemetry and updater notes
+  below still hold.
+- **Reviewed by:** Claude (Opus 5.5) for Daniel, 2026-11-09.
+
 ## 5.71.0-1 (2026-11-03)
 
 - **Why depot ships it:** Daniel's agents deploy to Railway from `bridge`
