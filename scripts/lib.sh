@@ -64,7 +64,7 @@ packages_for() {
 package_env() {
   local file=$DEPOT_ROOT/packages/$1/package.env key value
   [[ -f $file ]] || die "missing $file"
-  pkg_version='' pkg_source_url='' pkg_sha256='' pkg_upstream='' pkg_source_strip=1
+  pkg_version='' pkg_source_url='' pkg_sha256='' pkg_upstream='' pkg_source_strip=1 pkg_attest=''
   while IFS='=' read -r key value; do
     case $key in
       '' | '#'*) ;;
@@ -73,6 +73,7 @@ package_env() {
       sha256) pkg_sha256=$value ;;
       upstream) pkg_upstream=$value ;;
       source_strip) pkg_source_strip=$value ;;
+      attest) pkg_attest=$value ;;
       *) die "$file: unknown key $key" ;;
     esac
   done <"$file"

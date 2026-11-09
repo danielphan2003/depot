@@ -33,14 +33,14 @@ breakage is caught.
 | Package | Version | Targets | Why |
 | --- | --- | --- | --- |
 | [`age-plugin-fido2-hmac`](packages/age-plugin-fido2-hmac) | 0.5.0 | all | lets age decrypt with a FIDO2 key |
-| [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root |
+| [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root; upstream's attested binary |
 | [`bun`](packages/bun) | 1.4.4 | debian-trixie, fedora-44 | JavaScript runtime; upstream's binary, Arch ships it |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
-| [`custota-tool`](packages/custota-tool) | 6.8 | arch | signs Custota OTA update metadata |
+| [`custota-tool`](packages/custota-tool) | 6.8 | arch | signs Custota OTA update metadata; upstream's attested binary |
 | [`dpibreak`](packages/dpibreak) | 0.6.2 | arch, fedora-44 | system-wide DPI circumvention |
 | [`dufs`](packages/dufs) | 0.47.0 | arch | small file server |
-| [`ente-cli`](packages/ente-cli) | 0.4.2 | arch | Ente command-line client |
-| [`fcitx5-lotus`](packages/fcitx5-lotus) | 6.0.4 | arch | Vietnamese input method, with its uinput server (see its `allow`) |
+| [`ente-cli`](packages/ente-cli) | 0.4.2 | arch | Ente command-line client; upstream's attested binary |
+| [`fcitx5-lotus`](packages/fcitx5-lotus) | 6.0.4 | arch | Vietnamese input method, with its uinput server (see its `allow`); upstream's attested binary |
 | [`flyctl`](packages/flyctl) | 0.5.2 | arch | Fly.io command-line client |
 | [`freesmlauncher`](packages/freesmlauncher) | 2.3.1 | arch | Minecraft launcher (desktop app, see its `allow`) |
 | [`ghq`](packages/ghq) | 1.11.2 | debian-trixie, fedora-44 | repository manager; Arch ships it |
@@ -48,17 +48,19 @@ breakage is caught.
 | [`lazygit`](packages/lazygit) | 0.66.2 | fedora-44 | git TUI; Arch and Debian ship it |
 | [`nodejs-latest`](packages/nodejs-latest) | 26.13.0 | debian-trixie, fedora-44 | Node.js, newest stable release; upstream's binary |
 | [`nushell`](packages/nushell) | 0.116.1 | debian-trixie, fedora-44 | Daniel's shell; upstream's binary, Fedora's is too old |
+| [`railway-cli`](packages/railway-cli) | 5.71.0 | arch, fedora-44 | Railway command-line client (`railway`); upstream's attested binary |
 | [`run0-sudo-shim`](packages/run0-sudo-shim) | 1.4.2 | arch | `/usr/bin/sudo` through run0 and polkit; `provides`/`conflicts` sudo (see its `allow`) |
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
 | [`zellij`](packages/zellij) | 0.45.1 | debian-trixie, fedora-44 | terminal multiplexer; upstream's static binary |
 
-Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums.
+Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums. A package whose upstream binary carries a GitHub attestation uses that binary (Daniel, 2026-11-09), and `lint.sh` checks the attestation for the pinned file (`attest=` in `package.env`): `avbroot`, `custota-tool`, `ente-cli` and `railway-cli` have GitHub's release attestation, which proves the file is the asset upstream published with the tag, and `fcitx5-lotus` has SLSA build provenance, which proves upstream's workflow built it from the tag.
 
 ## Layout
 
 ```
 packages/<name>/
-  package.env          upstream version, tarball URL and sha256
+  package.env          upstream version, tarball URL and sha256, and attest=,
+                       the GitHub attestation an upstream binary carries
   AUDIT.md             what was reviewed, for every version
   allow                extra paths check_package accepts (optional, approved)
   test.sh              smoke test, run after a clean install
@@ -97,7 +99,8 @@ A package builds for every target whose recipe directory exists.
    scripts; `matrix.sh` lists them) builds
    nothing: it runs only `lint` and the required `ok` check, and a docs-only
    push to `main` does not start the workflow.
-   - `lint` checks that every recipe agrees with `package.env` and runs
+   - `lint` checks that every recipe agrees with `package.env`, checks the
+     GitHub attestation of each upstream binary (`attest=`), and runs
      ShellCheck, alongside the builds.
    - `build` builds each package for each target in a job of its own, in a
      container of that distribution, after a full upgrade, so packages link
@@ -200,6 +203,9 @@ Sources:
 
 - Does the recipe download only upstream's release artifact or tag
   tarball, over HTTPS, pinned by sha256?
+- If it repackages upstream's binary: does that binary carry a GitHub
+  attestation, named by `attest=` in `package.env` so `lint.sh` checks it?
+  Prefer SLSA build provenance (`build:<workflow>`) when upstream has it.
 - Does the tarball come from the upstream project itself, and not from a
   fork, a mirror, or the recipe author's account?
 - If the build fetches dependencies (Go modules, crates, npm packages),

@@ -3,6 +3,38 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 6.0.4-2 (2026-11-09)
+
+- **Change:** upstream's release binary instead of a source build (Daniel,
+  2026-11-09: a package whose upstream binary carries a GitHub attestation
+  uses that binary). The version, and so the upstream code, is the one
+  audited in 6.0.4-1 below.
+- **Source:**
+  `https://github.com/LotusInputMethod/fcitx5-lotus/releases/download/v6.0.4/fcitx5-lotus-v6.0.4-x86_64-archlinux.tar.zst`,
+  sha256 `23c04d0a366346057fab5cc59d77b255b37319d209032c2d306d24f4368a9c52`:
+  upstream's Arch build, a tree of `etc/` and `usr/`.
+- **Attestation:** SLSA build provenance (`https://slsa.dev/provenance/v1`),
+  signed for
+  `LotusInputMethod/fcitx5-lotus/.github/workflows/build-and-release.yml`
+  run for `refs/tags/v6.0.4`. `lint.sh` checks it with `gh attestation
+  verify --signer-workflow ... --source-ref ...` on every run. Unlike a
+  release attestation, this proves upstream's own workflow built the file
+  from that tag.
+- **Contents:** only `usr/` is packaged, the same files the source build
+  installed (the paths in `allow`), plus the settings GUI's compiled
+  `__pycache__` files (Python 3.14) and the license under
+  `usr/share/licenses/fcitx5-lotus/`. The tarball's `etc/runit` and
+  `etc/init.d` services stay out, as before, and there is still no install
+  script. `check_package` enforces the paths.
+- **Binary:** `liblotus.so` and `fcitx5-lotus-server` link Arch's fcitx5,
+  libinput, libudev, libevdev, libnotify, GLib and D-Bus, as built by
+  upstream on 2026-10-31. The runtime `depends` are unchanged. depot no
+  longer rebuilds them against today's libraries, so a soname bump in one of
+  them shows up in the canary, and is fixed by an upstream release or a
+  return to the source build.
+- **Allowed paths:** unchanged (Daniel, 2026-11-03; see 6.0.4-1).
+- **Reviewed by:** Claude (Opus 5.5) for Daniel, 2026-11-09.
+
 ## 6.0.4-1 (2026-11-03)
 
 - **Why depot ships it:** Daniel's Vietnamese input method on `bridge`

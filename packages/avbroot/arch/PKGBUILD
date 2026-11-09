@@ -1,35 +1,19 @@
 # Maintainer: depot <https://github.com/danielphan2003/depot>
-# Reviewed from the AUR PKGBUILD `avbroot` (aur.git commit a8d8892, audited
-# 2026-11-03); see ../AUDIT.md. Changes: cargo fetch --locked, then an offline
-# --frozen build of the avbroot crate only; README in the docs.
+# Upstream's static release binary, repackaged; nothing is compiled. lint.sh
+# checks GitHub's release attestation for the pinned file; see ../AUDIT.md.
 pkgname=avbroot
 pkgver=3.37.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Patch Android A/B-style OTA images for root access'
 arch=('x86_64')
 url='https://github.com/chenxiaolong/avbroot'
 license=('GPL-3.0-only')
-depends=('gcc-libs' 'glibc')
-makedepends=('cargo')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('ab97eb47c4e8bcf87886c848a98a27d832b54d0978c2b66b00e05e36d2d43082')
-
-prepare() {
-  cd "$pkgname-$pkgver"
-  export RUSTUP_TOOLCHAIN=stable
-  cargo fetch --locked --target host-tuple
-}
-
-build() {
-  cd "$pkgname-$pkgver"
-  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
-  CFLAGS+=' -ffat-lto-objects'
-  cargo build --frozen --release -p avbroot
-}
+options=('!strip' '!debug')
+source=("$url/releases/download/v$pkgver/avbroot-$pkgver-x86_64-unknown-linux-gnu.zip")
+sha256sums=('ca8e1e02bc33f5569d5228f312ce1351d0244fecd2d2163cb5a3c1a283a6e4a3')
 
 package() {
-  cd "$pkgname-$pkgver"
-  install -Dm755 target/release/avbroot -t "$pkgdir/usr/bin"
+  install -Dm755 avbroot -t "$pkgdir/usr/bin"
   install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }
