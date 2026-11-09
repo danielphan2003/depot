@@ -35,7 +35,8 @@ fi
 # only_available: with DEPOT_INSTALL_ONLY, drop the names the repository does
 # not have (a package whose first publish has not run yet). None at all means
 # the repository could not be read: a new target builds everything, so it
-# never gets here.
+# never gets here. A built package that depends on a skipped one would fail
+# the second pass; no depot package depends on another today.
 only_available() {
   [[ ${DEPOT_INSTALL_ONLY:-} == 1 ]] || return 0
   local name kept=()

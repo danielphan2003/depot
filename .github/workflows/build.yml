@@ -41,7 +41,8 @@ defaults:
 # shares one group, so publishes happen in commit order and an older run's
 # recipes never drop a newer run's package. Runs that never publish (weekly,
 # manual without publish) have their own, so they cannot replace a push run
-# waiting its turn.
+# waiting its turn. Never re-run an old run on main: it would publish that
+# commit's recipes over newer ones. Run build.yml with publish ticked instead.
 concurrency:
   group: >-
     build-${{ github.ref }}${{ (github.event_name == 'schedule' ||
