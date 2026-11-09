@@ -37,10 +37,12 @@ defaults:
   run:
     shell: bash
 
-# Per event, so the weekly or a manual run never replaces a push run that is
-# waiting its turn on main. publish has its own group per target.
+# Every run that can publish (pushes and manual runs on main) shares one
+# group, so publishes happen in commit order and an older run's recipes never
+# drop a newer run's package. The weekly run, which never publishes, has its
+# own, so it cannot replace a push run waiting its turn.
 concurrency:
-  group: build-${{ github.ref }}-${{ github.event_name }}
+  group: build-${{ github.ref }}${{ github.event_name == 'schedule' && '-weekly' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -200,7 +202,9 @@ jobs:
           compression-level: 0
 
   # Install what this run built from the test repository, in each image that
-  # installs the target (lib.sh's run_images: Arch and CachyOS for arch).
+  # installs the target (lib.sh's run_images: Arch and CachyOS for arch). The
+  # target's other packages are installed from the live repository first, so
+  # a file clash with one of them fails here, before publishing.
   test:
     name: test (${{ matrix.target }}, ${{ matrix.image }})
     timeout-minutes: 30
@@ -220,11 +224,16 @@ jobs:
           name: test-repo-${{ matrix.target }}
           path: repo
       - run: |
+          read -ra rest <<<"$OTHERS"
+          if [ ${#rest[@]} -gt 0 ]; then
+            DEPOT_INSTALL_ONLY=1 scripts/install-test.sh "$TARGET" "$DEPOT_URL" keys/depot.asc "${rest[@]}"
+          fi
           read -ra pkgs <<<"$PACKAGES"
           scripts/install-test.sh "$TARGET" "file://$PWD/repo" repo/depot-test.asc "${pkgs[@]}"
         env:
           TARGET: ${{ matrix.target }}
           PACKAGES: ${{ matrix.packages }}
+          OTHERS: ${{ matrix.others }}
 
   # The one check the main ruleset requires, so the ruleset does not have to
   # name every matrix job. It passes only if lint and plan passed and, when

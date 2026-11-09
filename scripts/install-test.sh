@@ -10,6 +10,13 @@
 # that run built, and against the published repository after publishing and
 # daily (canary.yml), which catches a distribution library bump that broke a
 # published binary.
+#
+# DEPOT_INSTALL_ONLY=1 installs the named packages that <base-url> has and
+# tests nothing. CI's test job uses it to install the target's other packages
+# from the live repository first, so a file one of this run's packages shares
+# with them fails the install from the test repository that follows. It can
+# run twice in one container: the second run points the depot repository at
+# its own <base-url>.
 source "$(dirname "$0")/lib.sh"
 
 [[ $# -ge 3 ]] || die "usage: install-test.sh <target> <base-url> <public-key> [package...]"
@@ -25,6 +32,19 @@ if [[ $# -gt 3 ]]; then
 fi
 [[ ${#names[@]} -gt 0 ]] || { log "no packages for $1"; exit 0; }
 
+# only_available: with DEPOT_INSTALL_ONLY, drop the names the repository does
+# not have (a package whose first publish has not run yet), and stop if none
+# are left.
+only_available() {
+  [[ ${DEPOT_INSTALL_ONLY:-} == 1 ]] || return 0
+  local name kept=()
+  for name in "${names[@]}"; do
+    if available "$name"; then kept+=("$name"); else log "$base has no $name; not installing it"; fi
+  done
+  [[ ${#kept[@]} -gt 0 ]] || { log "none of them are at $base"; exit 0; }
+  names=("${kept[@]}")
+}
+
 case $family in
   arch)
     pacman -Syu --noconfirm
@@ -33,13 +53,20 @@ case $family in
     pacman-key --init
     pacman-key --add "$key"
     pacman-key --lsign-key "$(key_fingerprint "$key")"
+    # [depot] is the last section, from an earlier run of this script.
+    sed -i '/^\[depot\]$/,$d' /etc/pacman.conf
     cat >>/etc/pacman.conf <<CONF
 
 [depot]
 SigLevel = Required DatabaseRequired
 Server = $base/arch/\$arch
 CONF
+    # A cached database from an earlier run's server would be kept if it is
+    # newer than this server's, and then fail this server's signature.
+    rm -f /var/lib/pacman/sync/depot.*
     pacman -Sy --noconfirm
+    available() { pacman -Si "depot/$1" &>/dev/null; }
+    only_available
     # --ask 4 accepts removing a conflicting package, as a machine does when
     # a depot package replaces one (run0-sudo-shim replaces sudo; only
     # relations that packages/<name>/allow grants get published).
@@ -70,6 +97,8 @@ Architectures: amd64
 Signed-By: /etc/apt/keyrings/depot.asc
 CONF
     apt-get update -q
+    available() { apt-cache madison "$1" | grep -qF " $base/debian "; }
+    only_available
     apt-get -qy install --no-install-recommends "${names[@]}"
     files() { dpkg -L "$1"; }
     ;;
@@ -86,10 +115,18 @@ repo_gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-depot
 includepkgs=${names[*]}
 CONF
+    # -y: the first query imports the repository key.
+    available() { [[ -n $(dnf -y -q repoquery --repo depot "$1" 2>/dev/null) ]]; }
+    only_available
     dnf -y install "${names[@]}"
     files() { rpm -ql "$1"; }
     ;;
 esac
+
+if [[ ${DEPOT_INSTALL_ONLY:-} == 1 ]]; then
+  log "installed from $base: ${names[*]}"
+  exit 0
+fi
 
 failed=0
 for name in "${names[@]}"; do

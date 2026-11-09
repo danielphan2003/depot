@@ -6,7 +6,8 @@
 #            {target, image, packages}, packages space-separated.
 #   publish  the same targets: {target, image}, in the target's first run image.
 #   test     one entry per target that builds anything and image that
-#            installs it: {target, image, packages}.
+#            installs it: {target, image, packages, others}, others being the
+#            target's packages this run does not build.
 #
 # With <base>, a commit, only what the change from <base> to HEAD can affect
 # builds: a file in a recipe directory (packages/<name>/arch/, debian/ or
@@ -91,10 +92,18 @@ fi
 
 for t in $(targets); do
   target_info "$t"
-  pkgs=()
+  pkgs=() others=()
   while read -r name; do
-    [[ $all -eq 1 || -n ${whole[$t]:-} || -n ${want["$t $name"]:-} ]] && pkgs+=("$name")
+    if [[ $all -eq 1 || -n ${whole[$t]:-} || -n ${want["$t $name"]:-} ]]; then
+      pkgs+=("$name")
+    else
+      others+=("$name")
+    fi
   done < <(packages_for)
+  # publish.sh cannot publish an empty repository, so the last recipe of a
+  # target cannot go without the target.
+  [[ ${#pkgs[@]} -gt 0 || -z ${whole[$t]:-} ]] ||
+    die "$t has no recipes left: remove it from targets() in lib.sh, and its repository from the bucket"
   [[ ${#pkgs[@]} -gt 0 ]] || continue
   log "$t: ${pkgs[*]}"
   for name in "${pkgs[@]}"; do
@@ -107,8 +116,8 @@ for t in $(targets); do
   jq -cn --arg target "$t" --arg image "${run_images[0]}" \
     '{job: "publish", target: $target, image: $image}'
   for run_image in "${run_images[@]}"; do
-    jq -cn --arg target "$t" --arg image "$run_image" --arg packages "${pkgs[*]}" \
-      '{job: "test", target: $target, image: $image, packages: $packages}'
+    jq -cn --arg target "$t" --arg image "$run_image" --arg packages "${pkgs[*]}" --arg others "${others[*]}" \
+      '{job: "test", target: $target, image: $image, packages: $packages, others: $others}'
   done
 done | jq -cs '{
   build: map(select(.job == "build")) | sort_by(-.seconds) | map(del(.job, .seconds)),
