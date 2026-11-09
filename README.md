@@ -82,23 +82,36 @@ A package builds for every target whose recipe directory exists.
 ## What CI does
 
 1. `build.yml` runs on every pull request, on pushes to `main`, and weekly.
-   A change that touches only docs (`docs/**` and `*.md`) builds nothing: a
-   push to `main` does not start the workflow, and a pull request runs only
-   `lint` and the required `ok` check.
+   It builds only what a change can affect (`scripts/matrix.sh`): a file
+   under `packages/<name>/arch/`, `debian/` or `rpm/` builds that package
+   for that target, and any other file of `packages/<name>/` builds it for
+   all of its targets. A change to the shared scripts or the workflow
+   builds everything, as do the weekly run and a manual run on `main`. A
+   pull request is compared with its base, a push to `main` with the last
+   push whose run passed (so nothing a failed run missed goes unpublished),
+   and the manual run `bump.yml` starts on an update branch with `main`.
+   A change that touches only docs (`docs/**` and `*.md`) or files no build
+   reads (`nvchecker.toml`, `infra/`, the bump and canary scripts) builds
+   nothing: it runs only `lint` and the required `ok` check, and a docs-only
+   push to `main` does not start the workflow.
    - `lint` checks that every recipe agrees with `package.env` and runs
-     ShellCheck.
-   - `build` builds each package for each target in a job of its own
-     (`scripts/matrix.sh` lists them), in a container of that distribution,
-     after a full upgrade, so packages link against today's libraries. One
-     package's build code never sees another's output.
+     ShellCheck, alongside the builds.
+   - `build` builds each package for each target in a job of its own, in a
+     container of that distribution, after a full upgrade, so packages link
+     against today's libraries. One package's build code never sees
+     another's output. Builds skip debug info, which depot does not ship:
+     makepkg runs with `!debug` and `make -j$(nproc)`, and Fedora's Rust
+     flags drop `-Cdebuginfo=2 -Ccodegen-units=1` for cargo's defaults.
    - `repo` gathers each target's packages with `scripts/collect.sh`, which
      refuses a job's output unless every package in it has that job's
      package name. It runs `scripts/test-check-package.sh`, which feeds
      `check_package` crafted hostile packages and the real ones, then signs
      a test repository with a throwaway key.
-   - `test` installs from that test repository into a fresh container. It
-     runs each `test.sh` and fails if a binary has a missing library.
-   - `publish` (pushes to `main`, or a manual run with `publish` ticked) signs with the real key and uploads.
+   - `test` installs the packages this run built from that test repository
+     into a fresh container. It runs each `test.sh` and fails if a binary
+     has a missing library.
+   - `publish` (pushes to `main`, or a manual run with `publish` ticked) signs with the real key and uploads,
+     for each target this run built. Packages it did not build stay as published.
      A package file that is already published is never replaced (only a
      key rotation re-signs it); the indices are rebuilt on every publish.
      Every package, new or already published, must pass `check_package` in
@@ -111,7 +124,7 @@ A package builds for every target whose recipe directory exists.
      plain files under `usr/bin`, `usr/lib{,64}/<name>`,
      `usr/share/{doc,licenses}/<name>` and `usr/share/man`. Files already in
      the bucket are verified against the key before they are listed again.
-   - `verify` installs from the live URL in fresh containers.
+   - `verify` installs every package of each published target from the live URL in fresh containers.
 2. `canary.yml` repeats the live install every day. If a distribution
    library bump broke a published binary, the canary opens an issue.
 3. `bump.yml` runs nvchecker every day, from hash-pinned requirements in a

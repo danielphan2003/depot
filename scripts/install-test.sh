@@ -1,21 +1,28 @@
 #!/usr/bin/env bash
-# install-test.sh <target> <base-url> <public-key>
+# install-test.sh <target> <base-url> <public-key> [package...]
 #
 # Run in a fresh container of <target>'s distribution, as root. Upgrades it,
 # adds the depot repository at <base-url> the way a machine would (key
-# trusted, signatures required), installs every package that has a recipe for
-# <target>, runs each package's test.sh, and fails if any installed ELF file
-# has a missing shared library. CI runs it against the throwaway test
-# repository on every build, and against the published repository after
-# publishing and daily (canary.yml), which catches a distribution library
-# bump that broke a published binary.
+# trusted, signatures required), installs the named packages, or every
+# package that has a recipe for <target>, runs each package's test.sh, and
+# fails if any installed ELF file has a missing shared library. CI runs it
+# against the throwaway test repository on every build, naming the packages
+# that run built, and against the published repository after publishing and
+# daily (canary.yml), which catches a distribution library bump that broke a
+# published binary.
 source "$(dirname "$0")/lib.sh"
 
-[[ $# -eq 3 ]] || die "usage: install-test.sh <target> <base-url> <public-key>"
+[[ $# -ge 3 ]] || die "usage: install-test.sh <target> <base-url> <public-key> [package...]"
 target_info "$1"
 base=$2
 key=$(cd "$(dirname "$3")" && pwd)/$(basename "$3")
 mapfile -t names < <(packages_for)
+if [[ $# -gt 3 ]]; then
+  for name in "${@:4}"; do
+    [[ " ${names[*]} " == *" $name "* ]] || die "$name has no recipe for $1"
+  done
+  names=("${@:4}")
+fi
 [[ ${#names[@]} -gt 0 ]] || { log "no packages for $1"; exit 0; }
 
 case $family in

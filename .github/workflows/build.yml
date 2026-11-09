@@ -51,61 +51,79 @@ jobs:
         with:
           args: -color
 
-  # Whether this run has to build. A pull request that changes only docs
-  # (docs/** and *.md) skips build and test, and `ok` still reports, so the
-  # ruleset's required check passes. Every other event builds everything.
+  # What this run builds (scripts/matrix.sh): only the packages and targets
+  # the change can affect, so a version bump builds one package, not all of
+  # them. The base it diffs against:
+  #   - a pull request: its base commit;
+  #   - a push to main: the last push whose run passed, so a change whose run
+  #     failed or was cancelled still gets built and published by the next;
+  #   - a manual run on another branch (bump.yml starts one per update PR,
+  #     since PRs it opens start no workflows): main.
+  # The weekly run, a manual run on main and anything matrix.sh cannot place
+  # build everything. Docs-only changes build nothing, and `ok` still reports.
   # A paths filter on pull_request would skip the whole workflow, `ok`
   # included, and leave such a PR unmergeable.
-  changes:
+  plan:
     timeout-minutes: 5
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read # this workflow's runs on main
     outputs:
-      code: ${{ steps.diff.outputs.code }}
+      any: ${{ steps.matrix.outputs.any }}
+      build: ${{ steps.matrix.outputs.build }}
+      repo: ${{ steps.matrix.outputs.repo }}
+      publish: ${{ steps.matrix.outputs.publish }}
+      test: ${{ steps.matrix.outputs.test }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
-      - id: diff
+      - id: matrix
         env:
           EVENT: ${{ github.event_name }}
-          BASE: ${{ github.event.pull_request.base.sha }}
+          REF: ${{ github.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          code=true
-          if [ "$EVENT" = pull_request ]; then
-            files=$(git diff --name-only "$BASE...HEAD")
-            printf '%s\n' "$files"
-            if [ -z "$(grep -vE '^docs/|\.md$' <<<"$files" || true)" ]; then
-              code=false
-            fi
-          fi
-          echo "code=$code" >>"$GITHUB_OUTPUT"
-
-  # One entry per package and target (scripts/matrix.sh).
-  plan:
-    timeout-minutes: 5
-    needs: [lint, changes]
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-24.04
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - id: matrix
-        run: echo "matrix=$(scripts/matrix.sh)" >>"$GITHUB_OUTPUT"
+          base=
+          case $EVENT in
+            pull_request) base=$PR_BASE ;;
+            push)
+              shas=$(gh api "repos/$REPO/actions/workflows/build.yml/runs?branch=main&event=push&status=success&per_page=50" \
+                --jq '.workflow_runs[].head_sha') || shas=
+              for sha in $shas; do
+                if git merge-base --is-ancestor "$sha" HEAD 2>/dev/null; then
+                  base=$sha
+                  break
+                fi
+              done
+              ;;
+            workflow_dispatch)
+              if [ "$REF" != refs/heads/main ]; then base=origin/main; fi
+              ;;
+          esac
+          echo "base: ${base:-none, so everything builds}"
+          matrix=$(scripts/matrix.sh ${base:+"$base"})
+          for key in build repo publish test; do
+            echo "$key=$(jq -c ".$key" <<<"$matrix")" >>"$GITHUB_OUTPUT"
+          done
+          echo "any=$(jq '.build | length > 0' <<<"$matrix")" >>"$GITHUB_OUTPUT"
 
   # Each package builds in a job of its own, so one package's build code
-  # never sees another package's output.
+  # never sees another package's output. It does not wait for lint, which
+  # runs alongside; `ok` needs both.
   build:
     name: build (${{ matrix.target }}, ${{ matrix.package }})
     timeout-minutes: 60
     needs: plan
+    if: needs.plan.outputs.any == 'true'
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+        include: ${{ fromJSON(needs.plan.outputs.build) }}
     runs-on: ubuntu-24.04
     container: ${{ matrix.image }}
     # Upstream build code runs in this job, so it gets no secrets and a
@@ -127,17 +145,18 @@ jobs:
   # Gather each target's packages, check them, and sign a test repository
   # with a throwaway key. Only depot's own scripts run here.
   repo:
+    name: repo (${{ matrix.target }})
     timeout-minutes: 20
-    needs: build
+    needs: [plan, build]
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { target: arch, image: "docker.io/library/archlinux:base-devel" }
-          - { target: debian-trixie, image: "docker.io/library/debian:trixie" }
-          - { target: fedora-44, image: "registry.fedoraproject.org/fedora:44" }
+        include: ${{ fromJSON(needs.plan.outputs.repo) }}
     runs-on: ubuntu-24.04
     container: ${{ matrix.image }}
+    env:
+      TARGET: ${{ matrix.target }}
+      PACKAGES: ${{ matrix.packages }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -146,10 +165,12 @@ jobs:
         with:
           pattern: built-${{ matrix.target }}-*
           path: artifacts
-      - run: scripts/build.sh --prepare ${{ matrix.target }}
-      - run: scripts/collect.sh ${{ matrix.target }} artifacts out
-      - run: scripts/test-check-package.sh ${{ matrix.target }} out
-      - run: scripts/test-repo.sh ${{ matrix.target }} out repo
+      - run: scripts/build.sh --prepare "$TARGET"
+      - run: |
+          read -ra pkgs <<<"$PACKAGES"
+          scripts/collect.sh "$TARGET" artifacts out "${pkgs[@]}"
+      - run: scripts/test-check-package.sh "$TARGET" out
+      - run: scripts/test-repo.sh "$TARGET" out repo
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: packages-${{ matrix.target }}
@@ -161,18 +182,16 @@ jobs:
           path: repo/
           if-no-files-found: error
 
+  # Install what this run built from the test repository, in each image that
+  # installs the target (lib.sh's run_images: Arch and CachyOS for arch).
   test:
+    name: test (${{ matrix.target }}, ${{ matrix.image }})
     timeout-minutes: 30
-    needs: repo
+    needs: [plan, repo]
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { target: arch, image: "docker.io/library/archlinux:latest" }
-          # CachyOS uses the Arch repository too.
-          - { target: arch, image: "docker.io/cachyos/cachyos-v3:latest" }
-          - { target: debian-trixie, image: "docker.io/library/debian:trixie" }
-          - { target: fedora-44, image: "registry.fedoraproject.org/fedora:44" }
+        include: ${{ fromJSON(needs.plan.outputs.test) }}
     runs-on: ubuntu-24.04
     container: ${{ matrix.image }}
     steps:
@@ -183,28 +202,40 @@ jobs:
         with:
           name: test-repo-${{ matrix.target }}
           path: repo
-      - run: scripts/install-test.sh ${{ matrix.target }} "file://$PWD/repo" repo/depot-test.asc
+      - run: |
+          read -ra pkgs <<<"$PACKAGES"
+          scripts/install-test.sh "$TARGET" "file://$PWD/repo" repo/depot-test.asc "${pkgs[@]}"
+        env:
+          TARGET: ${{ matrix.target }}
+          PACKAGES: ${{ matrix.packages }}
 
   # The one check the main ruleset requires, so the ruleset does not have to
-  # name every matrix job: it passes only if lint passed and, unless the
-  # change is docs only, every build, repository and test job passed.
+  # name every matrix job. It passes only if lint and plan passed and, when
+  # plan found something to build, every build, repository and test job
+  # passed; when it found nothing, they must have been skipped. always(), so
+  # a cancelled run still reports a failure.
   ok:
     timeout-minutes: 5
-    needs: [lint, changes, plan, build, repo, test]
+    needs: [lint, plan, build, repo, test]
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - if: >-
-          needs.lint.result != 'success' || needs.changes.result != 'success' ||
-          (needs.changes.outputs.code == 'true' &&
-          (needs.plan.result != 'success' || needs.build.result != 'success' ||
-          needs.repo.result != 'success' || needs.test.result != 'success'))
-        run: exit 1
-      - run: echo "lint passed; build and test passed or were not needed"
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<<"$RESULTS"
+          jq -e '(.plan.outputs.any == "true") as $any
+            | .lint.result == "success" and .plan.result == "success"
+            and all(.build, .repo, .test; .result == (if $any then "success" else "skipped" end))' \
+            <<<"$RESULTS" >/dev/null
+          echo "lint passed; build and test passed or were not needed"
 
+  # Publish the targets this run built. publish.sh keeps every package this
+  # run did not build as it is published.
   publish:
+    name: publish (${{ matrix.target }})
     timeout-minutes: 20
-    needs: test
+    needs: [plan, test]
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish))
@@ -214,10 +245,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { target: arch, image: "docker.io/library/archlinux:latest" }
-          - { target: debian-trixie, image: "docker.io/library/debian:trixie" }
-          - { target: fedora-44, image: "registry.fedoraproject.org/fedora:44" }
+        include: ${{ fromJSON(needs.plan.outputs.publish) }}
     concurrency:
       group: publish-${{ matrix.target }}
       cancel-in-progress: false
@@ -234,33 +262,35 @@ jobs:
           name: packages-${{ matrix.target }}
           path: built
       # Distribution install scripts run here, so this step gets no secrets.
-      - run: scripts/repo-tools.sh ${{ matrix.target }}
-      - run: scripts/publish.sh ${{ matrix.target }} built
+      - run: scripts/repo-tools.sh "$TARGET"
         env:
+          TARGET: ${{ matrix.target }}
+      - run: scripts/publish.sh "$TARGET" built
+        env:
+          TARGET: ${{ matrix.target }}
           DEPOT_SIGNING_KEY: ${{ secrets.DEPOT_SIGNING_KEY }}
           DEPOT_UPLOAD_TOKEN: ${{ secrets.DEPOT_UPLOAD_TOKEN }}
           DEPOT_RESIGN: ${{ inputs.resign && '1' || '' }}
           DEPOT_WITHDRAW: ${{ inputs.withdraw }}
 
+  # Install every package of each published target from the live URL.
   verify:
+    name: verify (${{ matrix.target }}, ${{ matrix.image }})
     timeout-minutes: 20
-    needs: publish
+    needs: [plan, publish]
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { target: arch, image: "docker.io/library/archlinux:latest" }
-          # CachyOS uses the Arch repository too.
-          - { target: arch, image: "docker.io/cachyos/cachyos-v3:latest" }
-          - { target: debian-trixie, image: "docker.io/library/debian:trixie" }
-          - { target: fedora-44, image: "registry.fedoraproject.org/fedora:44" }
+        include: ${{ fromJSON(needs.plan.outputs.test) }}
     runs-on: ubuntu-24.04
     container: ${{ matrix.image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: scripts/install-test.sh ${{ matrix.target }} "$DEPOT_URL" keys/depot.asc
+      - run: scripts/install-test.sh "$TARGET" "$DEPOT_URL" keys/depot.asc
+        env:
+          TARGET: ${{ matrix.target }}
 
   report:
     timeout-minutes: 10

@@ -30,6 +30,10 @@ work=$(mktemp -d)
 
 prepare_arch() {
   pacman -Syu --noconfirm --needed base-devel git
+  # makepkg's defaults build debug info (C -g, Rust debuginfo=2) for a debug
+  # package depot deletes, and run make one job at a time. The release flags,
+  # hardening and LTO stay the distribution's.
+  printf '%s\n' "MAKEFLAGS=\"-j$(nproc)\"" 'OPTIONS+=(!debug)' >/etc/makepkg.conf.d/depot.conf
   # Upstream build code runs as builder, which has no sudo: root installs
   # the dependencies first.
   id builder &>/dev/null || useradd -m builder
@@ -92,7 +96,13 @@ build_fedora() {
   fetch_source "$1" "$top/SOURCES" >/dev/null
   spec=$DEPOT_ROOT/packages/$1/rpm/$1.spec
   dnf -y builddep "$spec"
-  rpmbuild -bb --define "_topdir $top" "$spec"
+  # Fedora's Rust flags build full debug info, which brp-strip removes again
+  # (depot builds no debuginfo packages), in one codegen unit, which leaves
+  # all but one core idle: no debug info, and 16 units, cargo's release
+  # default. The rest of build_rustflags (opt-level 3) stays Fedora's, and so
+  # do the hardening and PIE link flags.
+  rpmbuild -bb --define "_topdir $top" \
+    --define 'rustflags_debuginfo 0' --define 'rustflags_codegen_units 16' "$spec"
   find "$top/RPMS" -name '*.rpm' -exec mv -t "$out" {} +
 }
 

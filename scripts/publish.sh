@@ -6,6 +6,9 @@
 # DEPOT_UPLOAD_TOKEN (the Worker's bearer token) in the environment, and the
 # tools from repo-tools.sh, installed in an earlier step without them.
 #
+# <pkgdir> holds what this run built, which may be only the packages a change
+# touched: every other published package stays as it is.
+#
 # Published files are immutable: a package file whose name is already in the
 # bucket is kept, and the new build of it is dropped. Changing a published
 # package therefore needs a new version or release (scripts/bump-release.sh).
@@ -180,11 +183,14 @@ for f in "${!withdrawn[@]}"; do
   [[ -n ${matched[$f]:-} ]] || log "warning: withdraw: $f is not in $target's repository (typo, or another target?)"
 done
 
-# 3. Prune: drop packages without a recipe, keep the newest $keep versions.
+# 3. Prune: drop packages without a recipe for this target, keep the newest
+# $keep versions. A package this run did not build keeps its published files.
+declare -A recipes
+while read -r name; do recipes[$name]=1; done < <(packages_for)
 declare -A versions
 while IFS= read -r -d '' file; do
   read -r name ver < <(pkg_meta "$family" "$file")
-  if [[ -z ${built_names[$name]:-} ]]; then
+  if [[ -z ${recipes[$name]:-} ]]; then
     log "dropping $file: $name has no recipe any more"
     rm -f "$file" "$file.sig"
     continue
