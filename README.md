@@ -43,7 +43,6 @@ breakage is caught.
 | [`fcitx5-lotus`](packages/fcitx5-lotus) | 6.0.4 | arch | Vietnamese input method, with its uinput server (see its `allow`); upstream's attested binary |
 | [`flyctl`](packages/flyctl) | 0.5.2 | arch | Fly.io command-line client |
 | [`freesmlauncher`](packages/freesmlauncher) | 2.3.1 | arch | Minecraft launcher (desktop app, see its `allow`) |
-| [`ghq`](packages/ghq) | 1.11.2 | debian-trixie, fedora-44 | repository manager; Arch ships it |
 | [`gitea-tea`](packages/gitea-tea) | 0.16.0 | debian-trixie, fedora-44 | Gitea CLI (`tea`); Arch ships it as `tea`, Debian's `tea` is an editor |
 | [`lazygit`](packages/lazygit) | 0.66.2 | fedora-44 | git TUI; Arch and Debian ship it |
 | [`nodejs-latest`](packages/nodejs-latest) | 26.13.0 | debian-trixie, fedora-44 | Node.js, newest stable release; upstream's binary |

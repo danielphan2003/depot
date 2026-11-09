@@ -52,12 +52,6 @@ github = "superfly/flyctl"
 use_latest_release = true
 prefix = "v"
 
-[ghq]
-source = "github"
-github = "x-motemen/ghq"
-use_latest_release = true
-prefix = "v"
-
 [gitea-tea]
 source = "gitea"
 gitea = "gitea/tea"
