@@ -31,6 +31,12 @@ on:
 permissions:
   contents: read
 
+# bash, not the container's sh: Debian's is dash, which the steps' bash
+# syntax (read -a, <<<) breaks.
+defaults:
+  run:
+    shell: bash
+
 # Per event, so the weekly or a manual run never replaces a push run that is
 # waiting its turn on main. publish has its own group per target.
 concurrency:
