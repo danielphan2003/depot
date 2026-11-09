@@ -98,9 +98,11 @@ Components: main
 Architectures: amd64
 Signed-By: /etc/apt/keyrings/depot.asc
 CONF
-    # --error-on=any: a depot index that cannot be fetched fails here, not
-    # as packages that seem to be missing.
-    apt-get update -q --error-on=any
+    # The depot source alone, with --error-on=any: a depot index that cannot
+    # be fetched fails here, not as packages that seem to be missing, and a
+    # Debian mirror hiccup does not.
+    apt-get update -q --error-on=any -o Dir::Etc::SourceList=sources.list.d/depot.sources \
+      -o Dir::Etc::SourceParts=- -o APT::Get::List-Cleanup=0
     available() { apt-cache madison "$1" | grep -qF " $base/debian "; }
     only_available
     apt-get -qy install --no-install-recommends "${names[@]}"

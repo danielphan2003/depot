@@ -93,7 +93,8 @@ A package builds for every target whose recipe directory exists.
    push whose run passed (so nothing a failed run missed goes unpublished),
    and the manual run `bump.yml` starts on an update branch with `main`.
    A change that touches only docs (`docs/**` and `*.md`) or files no build
-   reads (`nvchecker.toml`, `infra/`, the bump and canary scripts) builds
+   reads (such as `nvchecker.toml`, `infra/`, `ci/` and the bump and canary
+   scripts; `matrix.sh` lists them) builds
    nothing: it runs only `lint` and the required `ok` check, and a docs-only
    push to `main` does not start the workflow.
    - `lint` checks that every recipe agrees with `package.env` and runs
@@ -262,7 +263,8 @@ Upstream change:
   key and the upload token are secrets of the `release` environment, which
   is limited to `main`. To publish again without a change (with `resign`
   or `withdraw`), run `build.yml` on `main` from the Actions tab with
-  `publish` ticked.
+  `publish` ticked. Never re-run an old run on `main` instead: it would
+  publish that commit's recipes over newer ones.
 - **Withdraw a bad release:** revert or fix the recipe in a PR, giving it a
   version that sorts higher (or an epoch). Then run `build.yml` on `main`
   with `publish` ticked and the bad file names in `withdraw`, for example
