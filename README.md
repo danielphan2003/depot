@@ -33,7 +33,7 @@ breakage is caught.
 | Package | Version | Targets | Why |
 | --- | --- | --- | --- |
 | [`age-plugin-fido2-hmac`](packages/age-plugin-fido2-hmac) | 0.5.0 | all | lets age decrypt with a FIDO2 key |
-| [`atuin`](packages/atuin) | 18.24.6 | debian-trixie, fedora-44 | shell history database; upstream's attested binary, Arch ships it |
+| [`atuin`](packages/atuin) | 18.24.6 | fedora-44 | shell history database; upstream's attested binary; Arch and Debian ship it |
 | [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root; upstream's attested binary |
 | [`bun`](packages/bun) | 1.4.4 | debian-trixie, fedora-44 | JavaScript runtime; upstream's binary, Arch ships it |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |

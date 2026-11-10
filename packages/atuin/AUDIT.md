@@ -12,9 +12,11 @@ read it. A version bump without an entry here does not get merged.
   nushell 0.116 (also from depot) renamed to `--description`: a parse error
   that stops nushell at start. atuin 18.13 dropped the tag. 18.12.1 also
   names two keybindings `atuin`, which nushell 0.116 warns about on every
-  start; 18.24.6 does not. Debian's 18.6.1 does not call `job spawn` at all.
-  It ships here to keep one version across machines. Only the Debian and
-  Fedora recipes exist; Arch keeps its own package.
+  start; 18.24.6 does not. Only the Fedora recipe exists. Arch keeps its own
+  package. There is no Debian recipe: depot's apt pin is below Debian's
+  packages, so a machine would install Debian's atuin of the same name over
+  depot's (CI's install test did, 2026-11-10), and Debian's 18.6.1 does not
+  call `job spawn`, so it works with nushell 0.116 anyway.
 - **Why a binary:** Daniel, 2026-11-06: repackage upstream's release
   binaries, and build from source only when that is needed. Daniel,
   2026-11-09: a package whose upstream binary carries a GitHub attestation
@@ -34,7 +36,7 @@ read it. A version bump without an entry here does not get merged.
   from the tag, not only that upstream published it. The release itself is not
   an immutable release, so `attest=release` would not have worked.
 - **Binary:** static-pie (musl), x86-64: no interpreter and no shared
-  libraries, so no library dependencies on any target (rpm records only
+  libraries, so no library dependencies (the rpm records only
   `rtld(GNU_HASH)`, which glibc provides). The musl build was chosen over
   `linux-gnu`, which is attested too, so a glibc on the target can never be
   too old (as `railway-cli` and `zellij`). It is built with upstream's release
@@ -46,12 +48,10 @@ read it. A version bump without an entry here does not get merged.
   project with a public release workflow, and this version's code is the one
   Arch ships.
 - **Install:** `/usr/bin/atuin` plus the license and README; no scriptlets, no
-  units, no links, which `check_package` enforces. `CHANGELOG.md` is left out
-  of the rpm; the deb ships it as the upstream changelog (debhelper's
-  default). `atuin-server` is a separate archive and is not packaged.
-  Built and installed in clean `fedora:44` and `debian:trixie` containers
-  on 2026-11-10, and `test.sh` passes: the binary runs and `atuin init nu`
-  works. Its output parses and starts cleanly under nushell 0.116.1, with
+  units, no links, which `check_package` enforces. `CHANGELOG.md` is left out.
+  `atuin-server` is a separate archive and is not packaged. Built and
+  installed in a clean `fedora:44` container on 2026-11-10, and `test.sh`
+  passes: the binary runs and `atuin init nu` works. Its output parses and starts cleanly under nushell 0.116.1, with
   no `job spawn -t` and no warnings.
 - **Network behavior:** `sync_address` defaults to Atuin's hosted server and
   `update_check` is on by default (a version query); both are user
