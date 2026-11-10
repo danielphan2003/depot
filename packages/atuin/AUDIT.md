@@ -10,8 +10,9 @@ read it. A version bump without an entry here does not get merged.
   also ships. Its `atuin init nu` calls `job spawn -t atuin`, and nushell
   renamed that flag to `--description` (`-d`) in 0.112: a parse error that
   stops nushell at start. It also names two keybindings `atuin`, which
-  nushell 0.116 warns about on every start. atuin 18.12.1 and older emit
-  `-t`; 18.13.0 to 18.13.2 emit `-d`; 18.13.3 and newer drop the tag. 18.24.6
+  nushell 0.116 warns about on every start. The releases that call `job spawn`
+  up to 18.12.1 emit `-t`; 18.13.0 to 18.13.2 emit `-d`; 18.13.3 and newer drop
+  the tag; older ones, such as Debian's 18.6.1, never call it. 18.24.6
   parses and starts without warnings under nushell 0.116.1. Only the Fedora
   recipe exists, and only Fedora uses depot's build:
   - Arch ships atuin 18.24.6 itself.
@@ -55,7 +56,7 @@ read it. A version bump without an entry here does not get merged.
   source is benign.
   - Build and CI: no change under `.github/`, `dist-workspace.toml`, scripts or
     a Dockerfile. `crates/atuin-octavo/build.rs` gains one `type_attribute`
-    line. No binary or vendored blobs were added: new files are Rust, SQL and
+    call (a clippy allow on a generated enum). No binary or vendored blobs were added: new files are Rust, SQL and
     protobuf sources.
   - Dependencies: `const_format` and its helpers `const_format_proc_macros`,
     `konst` and `konst_macro_rules` are new, all compile-time string
