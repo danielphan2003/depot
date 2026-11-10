@@ -122,3 +122,9 @@ github = "zellij-org/zellij"
 use_latest_release = true
 prefix = "v"
 
+
+[atuin]
+source = "github"
+github = "atuinsh/atuin"
+use_latest_release = true
+prefix = "v"

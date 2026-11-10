@@ -1,0 +1,14 @@
+Source: atuin
+Section: utils
+Priority: optional
+Maintainer: depot <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+Standards-Version: 4.7.2
+Homepage: https://github.com/atuinsh/atuin
+Rules-Requires-Root: no
+
+Package: atuin
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: magical shell history
+ Replaces the shell's history with a searchable SQLite database that records the directory, exit code and duration of each command, and can sync it end to end encrypted. Repackaged by depot from the upstream release binary.

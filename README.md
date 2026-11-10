@@ -33,6 +33,7 @@ breakage is caught.
 | Package | Version | Targets | Why |
 | --- | --- | --- | --- |
 | [`age-plugin-fido2-hmac`](packages/age-plugin-fido2-hmac) | 0.5.0 | all | lets age decrypt with a FIDO2 key |
+| [`atuin`](packages/atuin) | 18.24.6 | debian-trixie, fedora-44 | shell history database; upstream's attested binary, Arch ships it |
 | [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root; upstream's attested binary |
 | [`bun`](packages/bun) | 1.4.4 | debian-trixie, fedora-44 | JavaScript runtime; upstream's binary, Arch ships it |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
@@ -52,7 +53,7 @@ breakage is caught.
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
 | [`zellij`](packages/zellij) | 0.45.1 | debian-trixie, fedora-44 | terminal multiplexer; upstream's static binary |
 
-Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums. A package whose upstream binary carries a GitHub attestation uses that binary (Daniel, 2026-11-09), and `lint.sh` checks the attestation for the pinned file (`attest=` in `package.env`): `avbroot`, `custota-tool`, `ente-cli` and `railway-cli` have GitHub's release attestation, which proves the file is the asset upstream published with the tag, and `fcitx5-lotus` has SLSA build provenance, which proves upstream's workflow built it from the tag.
+Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums. A package whose upstream binary carries a GitHub attestation uses that binary (Daniel, 2026-11-09), and `lint.sh` checks the attestation for the pinned file (`attest=` in `package.env`): `atuin` has SLSA build provenance, and `avbroot`, `custota-tool`, `ente-cli` and `railway-cli` have GitHub's release attestation, which proves the file is the asset upstream published with the tag, and `fcitx5-lotus` has SLSA build provenance, which proves upstream's workflow built it from the tag.
 
 ## Layout
 
