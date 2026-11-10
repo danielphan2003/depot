@@ -101,7 +101,8 @@ read it. A version bump without an entry here does not get merged.
   (tried 2026-11-10). To roll back to an older atuin, move
   `~/.local/share/atuin/*.db` aside (sync again if logged in).
 - **Allowed paths:** none beyond the defaults. The `allow` file carries only
-  `override debian` (Daniel asked for it, 2026-11-10). It grants no path and
+  `override debian` (Daniel asked, 2026-11-10, for depot's atuin on Debian; this
+  entry is how, and his merge of the PR approves it). It grants no path and
   no relation, and changes nothing about what the package may contain: it
   only has the install test pin `atuin` at priority 600 for its Debian run.
   On a machine the same exception is opt-in by exact name, so no other depot

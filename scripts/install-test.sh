@@ -86,8 +86,9 @@ CONF
     # local test repository gets the same rule as the live one; a package
     # that shares a name with a Debian package then fails here, not later.
     # A package whose allow file says `override debian` is pinned above
-    # Debian's, as a machine does for the names it lists; apt uses the first
-    # stanza that matches, so these come before the general one.
+    # Debian's, as a machine does for the names it lists. A named stanza beats
+    # the generic `Package: *` one wherever it sits; these come first, as apt
+    # advises.
     : >/etc/apt/preferences.d/depot.pref
     for n in "${names[@]}"; do
       overrides_debian "$n" || continue

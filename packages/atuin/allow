@@ -1,4 +1,5 @@
-# Daniel asked for this on 2026-11-10 (scripts/lib.sh, overrides_debian).
+# Daniel asked, on 2026-11-10, for depot's atuin on Debian; this entry is how
+# (scripts/lib.sh, overrides_debian). His merge of the PR approves the mechanism.
 # Debian 13 ships atuin 18.6.1, and machines pin depot below Debian's packages,
 # so a plain install would take Debian's. This line makes install-test.sh pin
 # depot's atuin above Debian's, as a machine does that lists atuin as an

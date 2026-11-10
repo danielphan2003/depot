@@ -62,7 +62,7 @@ packages/<name>/
   package.env          upstream version, tarball URL and sha256, and attest=,
                        the GitHub attestation an upstream binary carries
   AUDIT.md             what was reviewed, for every version
-  allow                extra paths check_package accepts (optional, approved)
+  allow                extra paths, Arch relations or `override debian` that check_package/install-test accept (optional, approved)
   test.sh              smoke test, run after a clean install
   arch/PKGBUILD        pacman recipe (optional)
   debian/              Debian packaging, binary-only build (optional)
