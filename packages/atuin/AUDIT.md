@@ -13,15 +13,18 @@ read it. A version bump without an entry here does not get merged.
   nushell 0.116 warns about on every start. The releases that call `job spawn`
   up to 18.12.1 emit `-t`; 18.13.0 to 18.13.2 emit `-d`; 18.13.3 and newer drop
   the tag; older ones, such as Debian's 18.6.1, never call it. 18.24.6
-  parses and starts without warnings under nushell 0.116.1. Only the Fedora
-  recipe exists, and only Fedora uses depot's build:
-  - Arch ships atuin 18.24.6 itself.
-  - Debian 13 ships 18.6.1 (Debian's package index). depot's apt pin is below
-    Debian's packages, so a machine installs Debian's atuin of the same name
-    over depot's (CI's install test did, 2026-11-10); a first draft had a
-    Debian recipe, and that test failed. Debian's 18.6.1 does not call
+  parses and starts without warnings under nushell 0.116.1. Recipes exist for
+  Fedora and Debian; Arch ships atuin 18.24.6 itself.
+  - Debian 13 ships 18.6.1 (Debian's package index). It does not call
     `job spawn`, and works with nushell 0.116.1 but warns twice on every
-    start (a deprecated flag, and the same duplicate keybinding name).
+    start (a deprecated flag, and the same duplicate keybinding name). Daniel
+    asked, on 2026-11-10, for the current atuin there too.
+  - depot's apt pin is below Debian's packages, so a machine installs Debian's
+    atuin of the same name over depot's. The first draft's Debian recipe
+    failed CI's install test for that reason, 2026-11-10. The recipe is back
+    with an `allow` entry, `override debian`, which makes the install test pin
+    depot's atuin above Debian's as a machine does that lists atuin. A machine
+    that does not list it keeps Debian's.
 - **Why a binary:** Daniel, 2026-11-06: repackage upstream's release
   binaries, and build from source only when that is needed. Daniel,
   2026-11-09: a package whose upstream binary carries a GitHub attestation
@@ -47,7 +50,7 @@ read it. A version bump without an entry here does not get merged.
   (as `railway-cli` and `zellij`). It is built with upstream's release
   profile, not the distributions' flags. Upstream strips it; depot does not
   strip it again (54 MB installed).
-- **Build:** none. The recipe unpacks the archive and installs the binary as
+- **Build:** none. The recipes unpack the archive and install the binary as
   it is, with no network access beyond the pinned download.
 - **Upstream change read:** this is the package's first entry, so the baseline
   is the previous release: the diff `v18.24.5...v18.24.6` (28 commits, about
@@ -85,9 +88,11 @@ read it. A version bump without an entry here does not get merged.
     (18.12.1 has `daemon` only), and a one-way local database migration (see
     Install).
 - **Install:** `/usr/bin/atuin` plus the license and README; no scriptlets, no
-  units, no links, which `check_package` enforces. `CHANGELOG.md` is left out.
-  `atuin-server` is a separate archive and is not packaged. Built and
-  installed in a clean `fedora:44` container on 2026-11-10, and `test.sh`
+  units, no links, which `check_package` enforces. `CHANGELOG.md` is left out
+  of the rpm; the deb ships it as the upstream changelog (debhelper's
+  default). `atuin-server` is a separate archive and is not packaged. Built
+  and installed in clean `fedora:44` and `debian:trixie` containers on
+  2026-11-10 (the deb with the pin exception in place), and `test.sh`
   passes: the binary runs, and `atuin init nu` output passes `nu-check`.
   It starts cleanly under nushell 0.116.1, with no `job spawn -t` and no
   warnings. **Upgrading from an older atuin is one-way for the local
@@ -95,6 +100,14 @@ read it. A version bump without an entry here does not get merged.
   fails with `migration 20260224000100 was previously applied but is missing`
   (tried 2026-11-10). To roll back to an older atuin, move
   `~/.local/share/atuin/*.db` aside (sync again if logged in).
+- **Allowed paths:** none beyond the defaults. The `allow` file carries only
+  `override debian` (Daniel asked for it, 2026-11-10). It grants no path and
+  no relation, and changes nothing about what the package may contain: it
+  only has the install test pin `atuin` at priority 600 for its Debian run.
+  On a machine the same exception is opt-in by exact name, so no other depot
+  package can replace a Debian one. The cost of opting in is that the machine
+  takes `atuin` updates from depot, not from Debian, which no longer
+  updates it on that machine.
 - **Network behavior:** `sync_address` defaults to Atuin's hosted server and
   `update_check` is on by default (a version query); both are user
   configuration. The self-updater, `atuin update`, refuses to run without the receipt that

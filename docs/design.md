@@ -147,7 +147,9 @@ machine's configuration record in git:
 Machines also limit what depot can touch, whatever happens in CI. dnf's
 `includepkgs=` lists the packages it may take from depot. An apt pin at
 priority 100 stops a depot package from upgrading a Debian package of the
-same name. pacman has no per-repository filter, so `[depot]` sits last in
+same name; the machine's configuration can lift that for the exact names it
+lists (priority 600), and a package whose `allow` file says `override debian`
+is tested that way. pacman has no per-repository filter, so `[depot]` sits last in
 `pacman.conf`, where distribution packages win, and `check_package` refuses
 `replaces`.
 

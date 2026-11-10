@@ -85,7 +85,15 @@ CONF
     # packages, never replace Debian's). Pin by the index's Origin, so the
     # local test repository gets the same rule as the live one; a package
     # that shares a name with a Debian package then fails here, not later.
-    cat >/etc/apt/preferences.d/depot.pref <<CONF
+    # A package whose allow file says `override debian` is pinned above
+    # Debian's, as a machine does for the names it lists; apt uses the first
+    # stanza that matches, so these come before the general one.
+    : >/etc/apt/preferences.d/depot.pref
+    for n in "${names[@]}"; do
+      overrides_debian "$n" || continue
+      printf 'Package: %s\nPin: release o=depot\nPin-Priority: 600\n\n' "$n" >>/etc/apt/preferences.d/depot.pref
+    done
+    cat >>/etc/apt/preferences.d/depot.pref <<CONF
 Package: *
 Pin: release o=depot
 Pin-Priority: 100
