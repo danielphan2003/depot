@@ -56,8 +56,8 @@ read it. A version bump without an entry here does not get merged.
   source is benign.
   - Build and CI: no change under `.github/`, `dist-workspace.toml`, scripts or
     a Dockerfile. `crates/atuin-octavo/build.rs` gains one `type_attribute`
-    call (a clippy allow on a generated enum). No binary or vendored blobs were added: new files are Rust, SQL and
-    protobuf sources.
+    call (a clippy allow on a generated enum). No binary or vendored blobs were added: new files are Rust and SQL
+    sources (and a test-regression text file); the protobuf sources changed.
   - Dependencies: `const_format` and its helpers `const_format_proc_macros`,
     `konst` and `konst_macro_rules` are new, all compile-time string
     formatting, with no network or file access. `rmcp` goes 3.3.0 to 3.9.0
