@@ -2,15 +2,15 @@
 # Upstream's static release binary, repackaged; nothing is compiled. lint.sh
 # checks GitHub's release attestation for the pinned file; see ../AUDIT.md.
 pkgname=avbroot
-pkgver=3.37.1
-pkgrel=2
+pkgver=3.39.1
+pkgrel=1
 pkgdesc='Patch Android A/B-style OTA images for root access'
 arch=('x86_64')
 url='https://github.com/chenxiaolong/avbroot'
 license=('GPL-3.0-only')
 options=('!strip' '!debug')
 source=("$url/releases/download/v$pkgver/avbroot-$pkgver-x86_64-unknown-linux-gnu.zip")
-sha256sums=('ca8e1e02bc33f5569d5228f312ce1351d0244fecd2d2163cb5a3c1a283a6e4a3')
+sha256sums=('145378039c372a1c80f3d0df7bdbe59b4ca6f612c10949da426278bb8b9994d7')
 
 package() {
   install -Dm755 avbroot -t "$pkgdir/usr/bin"
