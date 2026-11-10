@@ -5,18 +5,22 @@ read it. A version bump without an entry here does not get merged.
 
 ## 18.24.6-1 (2026-11-10)
 
-- **Why depot ships it:** Daniel wants one current atuin on every machine.
-  Arch ships it. Fedora 44's rpm is 18.12.1 and Debian 13's is 18.6.1 (from
-  the distributions' package indexes, 2026-11-10). atuin 18.12.1 and older
-  generate a nushell integration that calls `job spawn -t atuin`, a flag
-  nushell 0.116 (also from depot) renamed to `--description`: a parse error
-  that stops nushell at start. atuin 18.13 dropped the tag. 18.12.1 also
-  names two keybindings `atuin`, which nushell 0.116 warns about on every
-  start; 18.24.6 does not. Only the Fedora recipe exists. Arch keeps its own
-  package. There is no Debian recipe: depot's apt pin is below Debian's
-  packages, so a machine would install Debian's atuin of the same name over
-  depot's (CI's install test did, 2026-11-10), and Debian's 18.6.1 does not
-  call `job spawn`, so it works with nushell 0.116 anyway.
+- **Why depot ships it:** Fedora 44's atuin (rpm 18.12.1, from Fedora's
+  package index, 2026-11-10) does not work with nushell 0.116, which depot
+  also ships. Its `atuin init nu` calls `job spawn -t atuin`, and nushell
+  renamed that flag to `--description` (`-d`) in 0.112: a parse error that
+  stops nushell at start. It also names two keybindings `atuin`, which
+  nushell 0.116 warns about on every start. atuin 18.12.1 and older emit
+  `-t`; 18.13.0 to 18.13.2 emit `-d`; 18.13.3 and newer drop the tag. 18.24.6
+  parses and starts without warnings under nushell 0.116.1. Only the Fedora
+  recipe exists, and only Fedora uses depot's build:
+  - Arch ships atuin 18.24.6 itself.
+  - Debian 13 ships 18.6.1 (Debian's package index). depot's apt pin is below
+    Debian's packages, so a machine installs Debian's atuin of the same name
+    over depot's (CI's install test did, 2026-11-10); a first draft had a
+    Debian recipe, and that test failed. Debian's 18.6.1 does not call
+    `job spawn`, and works with nushell 0.116.1 but warns twice on every
+    start (a deprecated flag, and the same duplicate keybinding name).
 - **Why a binary:** Daniel, 2026-11-06: repackage upstream's release
   binaries, and build from source only when that is needed. Daniel,
   2026-11-09: a package whose upstream binary carries a GitHub attestation
@@ -38,21 +42,58 @@ read it. A version bump without an entry here does not get merged.
 - **Binary:** static-pie (musl), x86-64: no interpreter and no shared
   libraries, so no library dependencies (the rpm records only
   `rtld(GNU_HASH)`, which glibc provides). The musl build was chosen over
-  `linux-gnu`, which is attested too, so a glibc on the target can never be
-  too old (as `railway-cli` and `zellij`). It is built with upstream's release
+  `linux-gnu`, which is attested too, so the target's glibc does not matter
+  (as `railway-cli` and `zellij`). It is built with upstream's release
   profile, not the distributions' flags. Upstream strips it; depot does not
   strip it again (54 MB installed).
-- **Build:** none. The recipes unpack the archive and install the binary as it
-  is, with no network access beyond the pinned download. The source was not
-  read for this entry beyond the self-updater below: atuin is a widely used
-  project with a public release workflow, and this version's code is the one
-  Arch ships.
+- **Build:** none. The recipe unpacks the archive and installs the binary as
+  it is, with no network access beyond the pinned download.
+- **Upstream change read:** this is the package's first entry, so the baseline
+  is the previous release: the diff `v18.24.5...v18.24.6` (28 commits, about
+  100 files). Not read: the rest of the code base. The attestation ties the
+  binary to the tagged source and upstream's workflow; it does not say the
+  source is benign.
+  - Build and CI: no change under `.github/`, `dist-workspace.toml`, scripts or
+    a Dockerfile. `crates/atuin-octavo/build.rs` gains one `type_attribute`
+    line. No binary or vendored blobs were added: new files are Rust, SQL and
+    protobuf sources.
+  - Dependencies: `const_format` and its helpers `const_format_proc_macros`,
+    `konst` and `konst_macro_rules` are new, all compile-time string
+    formatting, with no network or file access. `rmcp` goes 3.3.0 to 3.9.0
+    (upstream says for three advisories), and `hyper-util` and
+    `unicode-normalization` get patch bumps. `deny.toml` ignores RUSTSEC-2026-0459
+    (bundled SQLite) with a written reason: it needs a crafted database file
+    written by the same user.
+  - New network and telemetry surface: the release now compiles in "octavo"
+    (`crates/atuin-octavo`, `crates/atuin-daemon/src/octavo`), which uploads
+    shell history, optionally command output, and AI-agent session threads to
+    Atuin's hub. It is off unless the user sets `octavo.enabled`, which
+    `atuin config enable octavo` does after a prompt that defaults to no.
+    Checked, not only taken from the commit message (#4693): in the source,
+    `octavo.enabled` and `octavo.upload_output` default to `false`
+    (`settings.rs`), and `Octavo::open` returns the no-op client unless
+    `octavo.enabled` is set or an `octavo.db` queue file exists
+    (`crates/atuin-daemon/src/octavo/mod.rs`). Ran the binary with a fresh home
+    and no network namespace: `init nu`, `history start`, `history end` and
+    `search` work, and the only files created are local databases and config,
+    with no `octavo.db`. The code to upload is still in the binary, so
+    **keep `octavo.enabled` off** unless an upload is wanted. Arch's package
+    has the same build.
+  - Not present in older atuin: 18.12.1 has none of this. Upgrading adds the
+    opt-in upload feature, the `ai`, `mcp`, `setup` and `config` subcommands
+    (18.12.1 has `daemon` only), and a one-way local database migration (see
+    Install).
 - **Install:** `/usr/bin/atuin` plus the license and README; no scriptlets, no
   units, no links, which `check_package` enforces. `CHANGELOG.md` is left out.
   `atuin-server` is a separate archive and is not packaged. Built and
   installed in a clean `fedora:44` container on 2026-11-10, and `test.sh`
-  passes: the binary runs and `atuin init nu` works. Its output parses and starts cleanly under nushell 0.116.1, with
-  no `job spawn -t` and no warnings.
+  passes: the binary runs, and `atuin init nu` output passes `nu-check`.
+  It starts cleanly under nushell 0.116.1, with no `job spawn -t` and no
+  warnings. **Upgrading from an older atuin is one-way for the local
+  database:** 18.24.6 migrates an 18.12.1 database in place, and 18.12.1 then
+  fails with `migration 20260224000100 was previously applied but is missing`
+  (tried 2026-11-10). To roll back to an older atuin, move
+  `~/.local/share/atuin/*.db` aside (sync again if logged in).
 - **Network behavior:** `sync_address` defaults to Atuin's hosted server and
   `update_check` is on by default (a version query); both are user
   configuration. The self-updater, `atuin update`, refuses to run without the receipt that

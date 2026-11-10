@@ -53,7 +53,7 @@ breakage is caught.
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
 | [`zellij`](packages/zellij) | 0.45.1 | debian-trixie, fedora-44 | terminal multiplexer; upstream's static binary |
 
-Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums. A package whose upstream binary carries a GitHub attestation uses that binary (Daniel, 2026-11-09), and `lint.sh` checks the attestation for the pinned file (`attest=` in `package.env`): `atuin` has SLSA build provenance, and `avbroot`, `custota-tool`, `ente-cli` and `railway-cli` have GitHub's release attestation, which proves the file is the asset upstream published with the tag, and `fcitx5-lotus` has SLSA build provenance, which proves upstream's workflow built it from the tag.
+Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums. A package whose upstream binary carries a GitHub attestation uses that binary (Daniel, 2026-11-09), and `lint.sh` checks the attestation for the pinned file (`attest=` in `package.env`): `avbroot`, `custota-tool`, `ente-cli` and `railway-cli` have GitHub's release attestation, which proves the file is the asset upstream published with the tag, and `atuin` and `fcitx5-lotus` have SLSA build provenance, which proves upstream's workflow built it from the tag.
 
 ## Layout
 
