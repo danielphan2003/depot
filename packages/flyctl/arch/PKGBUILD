@@ -7,7 +7,7 @@
 # `make test` (its tests reach Fly's API), and a two-line `fly` wrapper
 # instead of the symlink, since depot packages carry no links.
 pkgname=flyctl
-pkgver=0.5.2
+pkgver=0.5.7
 pkgrel=1
 pkgdesc='Command-line client for Fly.io'
 arch=('x86_64')
@@ -15,7 +15,7 @@ url='https://github.com/superfly/flyctl'
 license=('Apache-2.0')
 makedepends=('go')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('7655f0fdc81a5c09c26c22a2d1786bbaa4470d0b7385d4683a9df8795a47bbb5')
+sha256sums=('4c5a2b0fc41cbc34f2a5a96ca97950172eb6628424d4d418004e1d9f4b20f733')
 
 prepare() {
   cd "$pkgname-$pkgver"
