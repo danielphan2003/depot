@@ -363,6 +363,9 @@ allowed_paths() {
     case $kind in
       '' | '#'*) continue ;;
       relation) continue ;; # allowed_relations
+      override) # overrides_debian
+        [[ $pattern == debian && -z $rest ]] || die "$file: malformed entry: override $pattern $rest"
+        ;;
       path)
         [[ -n $pattern && -z $rest && $pattern != */ && $pattern =~ ^usr/ ]] ||
           die "$file: malformed entry: path $pattern $rest"
@@ -372,6 +375,22 @@ allowed_paths() {
     esac
   done <"$file"
   printf '%s' "$out"
+}
+
+# overrides_debian <name>: whether packages/<name>/allow has the line
+# `override debian`, which says the package is meant to replace the Debian
+# package of the same name. Machines pin depot below Debian's packages, so
+# such a package is only installed where the machine's own configuration
+# names it as an exception (factory's add-depot.sh); this entry only makes
+# install-test.sh pin it the way that machine does. Adding one needs Daniel's
+# approval, with an `- **Allowed paths:**` item in AUDIT.md saying why.
+overrides_debian() {
+  local file=$DEPOT_ROOT/packages/$1/allow kind value
+  [[ -f $file ]] || return 1
+  while read -r kind value _; do
+    [[ $kind == override && $value == debian ]] && return 0
+  done <"$file"
+  return 1
 }
 
 # Tools the signing and index steps need, installed into a fresh container.

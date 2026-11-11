@@ -33,7 +33,7 @@ breakage is caught.
 | Package | Version | Targets | Why |
 | --- | --- | --- | --- |
 | [`age-plugin-fido2-hmac`](packages/age-plugin-fido2-hmac) | 0.5.0 | all | lets age decrypt with a FIDO2 key |
-| [`atuin`](packages/atuin) | 18.24.6 | fedora-44 | shell history database; upstream's attested binary; Arch and Debian ship it |
+| [`atuin`](packages/atuin) | 18.24.6 | debian-trixie, fedora-44 | shell history database; upstream's attested binary; Arch ships it, and Debian's older one is replaced only on machines that opt in (see its `allow`) |
 | [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root; upstream's attested binary |
 | [`bun`](packages/bun) | 1.4.4 | debian-trixie, fedora-44 | JavaScript runtime; upstream's binary, Arch ships it |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
@@ -62,7 +62,7 @@ packages/<name>/
   package.env          upstream version, tarball URL and sha256, and attest=,
                        the GitHub attestation an upstream binary carries
   AUDIT.md             what was reviewed, for every version
-  allow                extra paths check_package accepts (optional, approved)
+  allow                extra paths, Arch relations or `override debian` that check_package/install-test accept (optional, approved)
   test.sh              smoke test, run after a clean install
   arch/PKGBUILD        pacman recipe (optional)
   debian/              Debian packaging, binary-only build (optional)
@@ -239,7 +239,12 @@ Install:
   comment saying why and an `- **Allowed paths:**` item in `AUDIT.md`.
   Grant exact files, never a directory such as `usr/lib/systemd/system`.
   The same file can grant an Arch package `relation provides <name>` or
-  `relation conflicts <name>`; every other relation stays refused.
+  `relation conflicts <name>`; every other relation stays refused. A line
+  `override debian` says a Debian package is meant to replace Debian's own
+  package of the same name: machines pin depot below Debian's packages, so
+  without it the install test installs Debian's package and fails, and with it
+  the test pins that name above Debian's, as a machine does that lists it.
+  A machine still has to opt in by name (factory's `add-depot.sh`).
 
 Upstream change:
 
