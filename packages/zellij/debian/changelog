@@ -1,3 +1,9 @@
+zellij (0.46.0-1) unstable; urgency=medium
+
+  * Upstream release 0.46.0.
+
+ -- depot <noreply@github.com>  Thu, 12 Nov 2026 08:13:25 +0000
+
 zellij (0.45.1-1) unstable; urgency=medium
 
   * Upstream release 0.45.1.
