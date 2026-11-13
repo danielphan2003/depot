@@ -3,6 +3,54 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 6.1.0-1 (2026-11-13)
+
+- **Why depot ships it:** Daniel's Vietnamese input method on `bridge`
+  (`DefaultIM=lotus`, mode "Uinput (Smooth)"). Replaces the AUR's
+  `fcitx5-lotus-bin`. Arch ships fcitx5-bamboo and fcitx5-unikey, not Lotus.
+- **Source:** upstream's Arch release build
+  `https://github.com/LotusInputMethod/fcitx5-lotus/releases/download/v6.1.0/fcitx5-lotus-v6.1.0-x86_64-archlinux.tar.zst`,
+  sha256 `c0ea1f9bc2e2ea1307592921e11a00e64f0a186853e6f8f1342696fef41919c2`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset.
+- **Attestation:** SLSA build provenance signed for
+  `LotusInputMethod/fcitx5-lotus/.github/workflows/build-and-release.yml`
+  run for `refs/tags/v6.1.0`; `gh attestation verify` with
+  `--signer-workflow` and `--source-ref` succeeded for the pinned file.
+  `lint.sh` repeats that check on every run. Upstream edited that workflow in
+  this release (Wayland and XCB build dependencies), and the attestation
+  still covers this file for this tag.
+- **Contents:** the archive holds the same file list as 6.0.4, so no new
+  install path appears. Every file it ships under `usr/` matches either
+  depot's default allowed set or an existing `allow` line; `etc/runit` and
+  `etc/init.d` stay out, as before, and there is still no install script.
+  `usr/bin/fcitx5-lotus-settings` is a three-line `/bin/sh` wrapper that runs
+  the settings GUI.
+- **Binary:** `liblotus.so` now also links `libxcb.so.1`,
+  `libxcb-xtest.so.0` and `libwayland-client.so.0`, for the new X11 XTEST and
+  wlroots virtual-keyboard injection backends. Those come from Arch's `libxcb`
+  and `wayland` packages, which fcitx5's own dependencies (`xcb-imdkit`,
+  `xcb-util-wm`, `wayland`) already install, so the runtime `depends` list is
+  unchanged and needs no new entry. `fcitx5-lotus-server` links the same
+  libraries as before. The binaries are upstream's Arch build from
+  2026-11-12, so a soname bump shows up in the canary, as with 6.0.4-2.
+- **Allowed paths:** unchanged. Nothing new is installed outside the paths
+  Daniel approved on 2026-11-03, and no `allow` line was needed.
+- **Upstream code read:** I read the `v6.0.4...v6.1.0` diff. It adds a
+  `zwp_virtual_keyboard_v1` backend for wlroots compositors and an XTEST
+  backend for X11, selected by a new `PreferVirtualKeyboard` setting that
+  runs as the user and lets the uinput service be skipped; it adds a
+  `protocols/virtual-keyboard-unstable-v1.xml` that `wayland-scanner`
+  compiles at build time. It also reworks window-focus tracking (D-Bus
+  plumbing, app name from a fresh focus event, XCB instead of another path on
+  GNOME Wayland), defers replacement post-delay work off the main thread,
+  fixes fd leaks to child processes, and fixes the PCH and warning build
+  breaks. No new network access, telemetry, credential export, install rule
+  or vendored binary. The server's socket peer checks are unchanged.
+- **Upstream status:** active and not archived, same `LotusInputMethod`
+  organization. Release 6.1.0 was published on 2026-11-12.
+- **Reviewed by:** GPT-6 Luna for Daniel, 2026-11-13.
+
 ## 6.0.4-2 (2026-11-09)
 
 - **Change:** upstream's release binary instead of a source build (Daniel,
