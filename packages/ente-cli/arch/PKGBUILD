@@ -2,15 +2,15 @@
 # Upstream's static release binary, repackaged; nothing is compiled. lint.sh
 # checks GitHub's release attestation for the pinned file; see ../AUDIT.md.
 pkgname=ente-cli
-pkgver=0.4.2
-pkgrel=2
+pkgver=0.4.4
+pkgrel=1
 pkgdesc='Command-line client for Ente Photos and Auth: export, sync and account tools'
 arch=('x86_64')
 url='https://github.com/ente/ente'
 license=('AGPL-3.0-only')
 options=('!strip' '!debug')
 source=("$url/releases/download/ente-cli-v$pkgver/ente-cli-v$pkgver-linux-amd64.tar.gz")
-sha256sums=('d1318a5bc3cf8f458f14732ea110cd167cc3e64e2d7ca5f3ce1cdd80f283b18a')
+sha256sums=('719834d6b65e9e48a4a1d4e3e577247633f0e8a5eb2bae30278ec6c6fc536f17')
 
 package() {
   install -Dm755 ente -t "$pkgdir/usr/bin"

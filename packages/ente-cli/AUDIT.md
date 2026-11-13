@@ -3,6 +3,52 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.4.4-1 (2026-11-13)
+
+- **Why depot ships it:** Ente's command-line client for exports and account
+  tools; Daniel uses Ente Photos. Arch does not package it.
+- **Why a binary:** the earlier source build linked system dbus, OpenSSL, and
+  SQLCipher. The upstream binary carries those libraries and has a GitHub
+  release attestation.
+- **Source:** upstream's Linux x86-64 release asset
+  `https://github.com/ente/ente/releases/download/ente-cli-v0.4.4/ente-cli-v0.4.4-linux-amd64.tar.gz`,
+  sha256 `719834d6b65e9e48a4a1d4e3e577247633f0e8a5eb2bae30278ec6c6fc536f17`.
+  The downloaded archive matches the recipe and the `SHA256SUMS` entry.
+  `gh release verify-asset` verified GitHub's immutable release attestation
+  for this exact asset and tag. `attest=release` is unchanged. The attestation
+  proves GitHub published these bytes with the release, not that CI built them
+  from the tag's source.
+- **Starting recipe:** the PR updates the version and sha256, and resets
+  `pkgrel` from 2 to 1. It changes no install commands or paths.
+- **Build and dependencies:** depot repackages the binary and does not build
+  it. Upstream CI runs `cargo build --locked --release -p ente-cli --bin ente`,
+  so Cargo uses the upstream lockfile and refuses lockfile changes. The CLI adds
+  only the internal workspace dependency `ente-location`; it adds no third-party
+  publisher to the CLI manifest.
+- **Upstream code read:** I compared the actual tags `ente-cli-v0.4.2` and
+  `ente-cli-v0.4.4`. The PR body link omits the `ente-cli-` tag prefix. The
+  update adds `ente feedback`, which sends the user-supplied message, CLI
+  version, and OS to `feedback.ente.com` when the user runs it; it does not
+  require login. It adds account usage queries and duplicate-photo removal.
+  Removal syncs metadata and moves extra copies to trash. It requires network
+  access and confirmation unless the user passes `--yes`; `--dry-run` previews
+  the plan. The new `photos place` commands download four location-data files
+  from `assets.ente.com` on first use. Each file has a pinned size and SHA-256,
+  which the existing asset downloader verifies before use. The login flow
+  validates decrypted auth tokens for Ente's built-in hosts. The feedback test
+  confirms that its unauthenticated request sends no Authorization header;
+  usage and duplicate operations use the existing Ente API session. I found no
+  token sent to a new host, no automatic telemetry, and no obfuscated code or
+  vendored executable.
+- **Upstream status:** active and not archived, with owner `ente`. Release
+  0.4.4 was published on 2026-11-11. The release workflow changed its signing
+  action name and now enables auto-merge for the release follow-up version PR.
+  **Not sure:** Daniel needs to approve this release-process change before
+  depot adopts the release.
+- **Install:** no install script, units, or triggers. The recipe still installs
+  only `/usr/bin/ente`; no `allow` entry or new install path is needed.
+- **Reviewed by:** GPT-6 Luna for Daniel, 2026-11-13.
+
 ## 0.4.2-2 (2026-11-09)
 
 - **Change:** upstream's release binary instead of a source build (Daniel,
