@@ -6,8 +6,8 @@
 %global __os_install_post %{nil}
 
 Name:           railway-cli
-Version:        5.71.0
-Release:        2%{?dist}
+Version:        5.74.0
+Release:        1%{?dist}
 Summary:        Railway command-line client
 License:        MIT
 URL:            https://github.com/railwayapp/cli
@@ -30,6 +30,9 @@ install -Dm755 railway -t %{buildroot}%{_bindir}
 %{_bindir}/railway
 
 %changelog
+* Fri Nov 13 2026 depot <noreply@github.com> - 5.74.0-1
+- Upstream release 5.74.0.
+
 * Mon Nov 09 2026 depot <noreply@github.com> - 5.71.0-2
 - Upstream's attested static release binary instead of a source build.
 
