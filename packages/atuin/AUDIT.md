@@ -3,6 +3,78 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 18.24.8-1 (2026-11-13)
+
+- **Why depot ships it:** Fedora 44's atuin (rpm 18.12.1, from Fedora's
+  package index, 2026-11-10) does not work with nushell 0.116, also shipped
+  by depot. Its `atuin init nu` calls `job spawn -t`, and nushell renamed that flag to
+  `--description` (`-d`) in 0.112: a parse error that stops nushell at start.
+  It also names two keybindings `atuin`, which nushell 0.116 warns about on
+  every start. Daniel asked, on 2026-11-10, for the current atuin on Debian
+  too.
+- **Why a binary:** Daniel, 2026-11-06: repackage upstream's release
+  binaries, and build from source only when that is needed. Daniel,
+  2026-11-09: a package whose upstream binary carries a GitHub attestation
+  uses that binary. This one does.
+- **Source:**
+  `https://github.com/atuinsh/atuin/releases/download/v18.24.8/atuin-x86_64-unknown-linux-musl.tar.gz`
+  from the GitHub release of `atuinsh/atuin` (the project's own
+  organization), sha256
+  `f8dfc3f9d27cadc2e2c9d489394ef7c568291e2382a4d184865701bf1a4ac30a`. It
+  matches the release's `sha256.sum` and the asset's own `.sha256` file.
+- **Attestation:** SLSA build provenance (`https://slsa.dev/provenance/v1`)
+  signed by
+  `atuinsh/atuin/.github/workflows/release.yml@refs/tags/v18.24.8` was
+  verified for the release archive and its `atuin` binary. `lint.sh` checks
+  the archive against this workflow and tag on every run.
+- **Binary:** static-pie (musl), x86-64: no interpreter and no shared
+  libraries. It is upstream's release binary, not rebuilt by depot.
+- **Build:** none. The recipes unpack the archive and install the binary as
+  it is, with no network access beyond the pinned download.
+- **Upstream change read:** the full diff `v18.24.6...v18.24.8`, including
+  the source, lockfile, and release workflow changes. No vendored binary blob
+  was added.
+  - New project config: upstream now reads `atuin.lua` and `.atuin.lua` files
+    from project directories without prompting. The Luau VM has only string,
+    table, and math libraries, calls `sandbox(true)`, has a memory limit and
+    a half-second time limit, and exposes no file access, `require`, or clock.
+    The file can set organization slugs for sharing threads from that project.
+  - New network and credential surface: the former opt-in Octavo setting is
+    renamed to `[teams]`, with `teams.enabled` and `teams.upload_output` both
+    defaulting to false; the old `[octavo]` setting is read as a legacy name.
+    When enabled, Atuin for Teams uploads shell history and agent threads to
+    the configured hub. Project config can queue thread shares with its
+    listed organizations. MCP clients can also forward thread-tool calls to
+    the Teams MCP server; that path uses the sync token and is only supplied
+    while Teams is enabled. These are opt-in, but include private command and
+    agent-session data when enabled.
+  - Dependencies: the lockfile adds crates for Luau config execution and the
+    MCP client transport, including `mlua`, `mlua-sys`, `luau0-src`,
+    `serde-value`, `erased-serde`, `bstr`, `inquire`, and `sse-stream`, plus
+    their transitive dependencies. I have not verified the publishers of all
+    newly resolved crates, so the dependency-publisher checklist answer is
+    **not sure**.
+  - Release process: upstream adds a musl C++ toolchain download to its
+    release build, pinned by architecture-specific hashes, and adds automatic
+    WinGet submissions through a new workflow. That workflow downloads Komac
+    2.17.2 with a pinned hash and uses `WINGET_TOKEN` to open pull requests in
+    `microsoft/winget-pkgs`. This is a material change to upstream's release
+    workflow and third-party publishing surface.
+- **Install:** `/usr/bin/atuin` plus the license and README; no scriptlets,
+  units, or links. The recipes still install only plain files in the allowed
+  locations. The Debian package also carries the upstream changelog.
+- **Allowed paths:** none.
+- **Network behavior:** `sync_address` defaults to Atuin's hosted server and
+  `update_check` is on by default (a version query); both are user
+  configuration. Teams uploads and remote MCP forwarding are disabled by
+  default as described above. The self-updater refuses to replace a
+  package-manager install.
+- **Upstream status:** active, same organization, several releases a month.
+- **Audit decision:** held. The new dependency publishers are not fully
+  verified, and the release workflow now automatically submits packages to
+  WinGet. Ask Daniel before merging.
+- **Reviewed by:** OpenCode (GPT-6 Luna) for Daniel, 2026-11-13.
+
 ## 18.24.6-1 (2026-11-10)
 
 - **Why depot ships it:** Fedora 44's atuin (rpm 18.12.1, from Fedora's
