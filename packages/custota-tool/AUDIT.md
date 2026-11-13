@@ -3,6 +3,44 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 6.10-1 (2026-11-13)
+
+- **Why depot ships it:** generates the signed update metadata the Custota
+  updater on the Pixel reads (same OTA setup). Arch does not package it.
+- **Source:** upstream's release binary
+  `https://github.com/chenxiaolong/Custota/releases/download/v6.10/custota-tool-6.10-x86_64-unknown-linux-gnu.zip`,
+  sha256 `bfc29fec6e7f7b5dd689dae02ad962d5bded6c3904d45de030963f9459a08ac5`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset. It holds one file, `custota-tool`.
+- **Attestation:** GitHub's immutable-release attestation lists this file, by
+  sha256, as an asset of release `v6.10` in `chenxiaolong/Custota`;
+  `gh release verify-asset v6.10` succeeded. `lint.sh` checks it on every
+  run. It proves the file is the unchanged asset upstream published with
+  that tag; Daniel accepted on 2026-11-09 that this, not build provenance,
+  is the bar. Upstream also signs each asset with its SSH key (`.sig`);
+  depot does not check that, as before.
+- **Binary:** static-pie, x86-64, stripped, BIND_NOW: no shared libraries, so
+  no runtime dependencies. Upstream's own build flags.
+- **Install:** `/usr/bin/custota-tool` only; the zip carries no README or
+  license file. No install script, no new path, no `allow` entry.
+- **Starting recipe:** unchanged apart from version and hash. This PR changes
+  only `package.env` and `arch/PKGBUILD`; `attest=release` and the
+  `source_url` shape are unchanged.
+- **Upstream code read:** I read the `v6.8...v6.10` diff. It switches
+  `custota-tool`'s CLI from clap to winnow-args, adds shell tab completion,
+  updates dependencies (including RustCrypto rsa 0.10.0 for
+  RUSTSEC-2023-0071), and changes the release CI to build the x86-64 binary
+  for x86-64-v2 with the amd64 glibc, fixing an AVX requirement introduced
+  when `ubuntu-latest` moved to Ubuntu 26.04. The Gradle verification
+  metadata, the Android app's release metadata and the CI action pins change
+  with it. I found no new network endpoint, telemetry, credential export,
+  vendored executable or install change. The tool still reads and writes
+  local files.
+- **Upstream status:** active and not archived, same owner,
+  `chenxiaolong`. Release 6.10 was published on 2026-11-10, and the release
+  workflow keeps the same shape.
+- **Reviewed by:** GPT-6 Luna for Daniel, 2026-11-13.
+
 ## 6.8-2 (2026-11-09)
 
 - **Change:** upstream's release binary instead of a source build (Daniel,
