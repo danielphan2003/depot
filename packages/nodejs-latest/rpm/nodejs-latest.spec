@@ -4,7 +4,7 @@
 %global __os_install_post %{nil}
 
 Name:           nodejs-latest
-Version:        26.13.0
+Version:        26.13.1
 Release:        1%{?dist}
 Summary:        JavaScript runtime built on V8
 License:        MIT
@@ -48,5 +48,8 @@ install -Dm644 share/man/man1/node.1 -t %{buildroot}%{_mandir}/man1
 %{_mandir}/man1/node.1*
 
 %changelog
+* Thu Nov 12 2026 depot <noreply@github.com> - 26.13.1-1
+- Upstream release 26.13.1.
+
 * Fri Nov 06 2026 depot <noreply@github.com> - 26.13.0-1
 - Upstream release 26.13.0.

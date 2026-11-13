@@ -3,7 +3,7 @@
 %global debug_package %{nil}
 
 Name:           lazygit
-Version:        0.66.2
+Version:        0.66.3
 Release:        1%{?dist}
 Summary:        Simple terminal UI for git commands
 License:        MIT
@@ -34,5 +34,8 @@ install -Dm755 lazygit -t %{buildroot}%{_bindir}
 %{_bindir}/lazygit
 
 %changelog
+* Sun Nov 08 2026 depot <noreply@github.com> - 0.66.3-1
+- Upstream release 0.66.3.
+
 * Tue Nov 03 2026 depot <noreply@github.com> - 0.66.2-1
 - Upstream release 0.66.2.

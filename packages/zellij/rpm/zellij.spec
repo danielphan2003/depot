@@ -4,7 +4,7 @@
 %global __os_install_post %{nil}
 
 Name:           zellij
-Version:        0.45.1
+Version:        0.46.0
 Release:        1%{?dist}
 Summary:        Terminal workspace and multiplexer
 License:        MIT
@@ -28,5 +28,8 @@ install -Dm755 zellij -t %{buildroot}%{_bindir}
 %{_bindir}/zellij
 
 %changelog
+* Thu Nov 12 2026 depot <noreply@github.com> - 0.46.0-1
+- Upstream release 0.46.0.
+
 * Fri Nov 06 2026 depot <noreply@github.com> - 0.45.1-1
 - Upstream release 0.45.1.

@@ -15,8 +15,9 @@ read it. A version bump without an entry here does not get merged.
   The tag ref points directly to commit `1f836fe16302703423c9751e5ae24afacf17377f`
   (a lightweight tag, with no tag signature); GitHub reports that commit's
   signature as verified. GitHub's attestation lookup for the archive returns
-  404. **Not sure:** no upstream checksum or build attestation covers the
-  source archive, and the pinned hash is the recipe's only archive hash.
+  404. No upstream checksum or build attestation covers the source archive,
+  and the pinned hash is the recipe's only archive hash. Daniel approved
+  accepting this source-provenance gap on 2026-11-13.
 - **Build and dependencies:** the package builds from source with Go.
   `GOFLAGS=-mod=readonly` and `GOTOOLCHAIN=local` keep Go from changing the
   module graph or downloading its own toolchain; `go.sum` pins module contents.
@@ -34,8 +35,8 @@ read it. A version bump without an entry here does not get merged.
   - The new metrics include `login_method` and can be flushed after command
     cancellation. The sender now gets a metrics token with a short,
     cancellation-independent timeout, making those metrics more likely to be
-    sent. **Not sure:** this expands automatic usage reporting and still needs
-    Daniel's approval.
+    sent. Daniel approved accepting this expanded automatic usage reporting
+    on 2026-11-13.
   - The 0.5.10 delta clarifies the `FlyV1` token prefix, lets
     `fly mpg connect` run SQL from command/file input, improves psql guidance,
     rejects unknown subcommands, and keeps `.git` out of generated build
@@ -47,9 +48,54 @@ read it. A version bump without an entry here does not get merged.
   is needed.
 - **Upstream status:** active, same owner (`superfly`), not archived; the
   release process is unchanged.
-- **Audit decision:** held. The source archive has no upstream checksum or
-  build attestation, and the expanded automatic metrics need Daniel's
-  approval.
+- **Audit decision:** Daniel approved the recorded source-provenance and
+  expanded-metrics concerns on 2026-11-13. The updated branch still needs fresh
+  checks after this merge from main.
+- **Reviewed by:** GPT-6 Luna for Daniel, 2026-11-13.
+
+## 0.5.8-1 (2026-11-13)
+
+- **Why depot ships it:** Fly.io's CLI; Daniel keeps it although `firefly`
+  was retired. Replaces the AUR's `flyctl-bin`.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.8.tar.gz`,
+  sha256 `b3d9e10336568f861895f9e21c3085786f0cfecb758c7c9ccf74f68976a2645b`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.8_checksums.txt` lists release binaries, not this tag tarball.
+  The tag is unsigned and the GitHub attestation lookup for the tarball returns
+  404. No upstream checksum, signature, or attestation covers the source
+  archive. Daniel approved accepting this source-provenance gap on
+  2026-11-13.
+- **Starting recipe:** unchanged from the AUR `flyctl` recipe
+  (`aur.git` commit `a21cf43`). This PR updates the version and source hash.
+- **Build and dependencies:** the package builds from source with Go. The
+  recipe sets `GOFLAGS=-mod=readonly` and `GOTOOLCHAIN=local`; `go.sum` pins
+  module contents. `go generate ./...` uses the bundled GraphQL schema and
+  generators pinned by `go.mod`. The `go.mod` changes promote several existing
+  indirect modules to direct requirements (`apex/log`, `containerd/api`,
+  `go-containerregistry`, `mcp-go`, `fsutil`, and `google.golang.org/protobuf`).
+  These were already in the prior module graph, so I found no new module
+  publisher. Go builds with `CGO_ENABLED=0` and upstream's release flags.
+- **Upstream code read:** I compared `v0.5.2...v0.5.8`. The diff fixes Fly's
+  personal-organization tunnel identity and token-file synchronization, adds
+  custom private-network support, and adds a `fly feedback` command. Feedback
+  is an explicit user action that sends a note, optional request ID or URL,
+  and the active account token to Fly's feedback API. The new affinity store
+  writes short-lived per-app routing tokens under the config directory with
+  mode `0600`, keyed by a hash of the endpoint and app name, and prunes expired
+  files. The update also adds `login_method` to automatic command metrics and
+  sends queued metrics after command cancellation. Daniel approved accepting
+  this expanded automatic reporting on 2026-11-13. I found no new third-party
+  network destination, obfuscated code, or vendored executable. The Docker
+  build images update to Go 1.27.3; the release workflow is unchanged.
+- **Install:** no install script, units, or triggers. The recipe still installs
+  `/usr/bin/flyctl`, its `fly` wrapper, the README, and the license. No
+  `allow` entry or new install path is needed.
+- **Upstream status:** active and not archived, with the same owner,
+  `superfly`. Release 0.5.8 was published on 2026-11-11; the release process
+  is unchanged.
+- **Decision:** Daniel approved the recorded source-provenance and metrics
+  concerns for 0.5.8 on 2026-11-13.
 - **Reviewed by:** GPT-6 Luna for Daniel, 2026-11-13.
 
 ## 0.5.2-1 (2026-11-03)

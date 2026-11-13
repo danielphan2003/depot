@@ -2,15 +2,15 @@
 # Upstream's static release binary, repackaged; nothing is compiled. lint.sh
 # checks GitHub's release attestation for the pinned file; see ../AUDIT.md.
 pkgname=custota-tool
-pkgver=6.8
-pkgrel=2
+pkgver=6.10
+pkgrel=1
 pkgdesc='Generate and sign update metadata for the Custota Android OTA updater'
 arch=('x86_64')
 url='https://github.com/chenxiaolong/Custota'
 license=('GPL-3.0-only')
 options=('!strip' '!debug')
 source=("$url/releases/download/v$pkgver/custota-tool-$pkgver-x86_64-unknown-linux-gnu.zip")
-sha256sums=('7c7e6cb64f3fe0993969813d26b4a66b7ea1689af47579e6543391a55ca40ecb')
+sha256sums=('bfc29fec6e7f7b5dd689dae02ad962d5bded6c3904d45de030963f9459a08ac5')
 
 package() {
   install -Dm755 custota-tool -t "$pkgdir/usr/bin"

@@ -3,6 +3,48 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 2.3.2-1 (2026-11-13)
+
+- **Why depot ships it:** Daniel's Minecraft launcher on `bridge` (1.9 GB
+  of instances). Replaces the AUR's `freesmlauncher-bin`, which repackaged
+  upstream's portable build under `/opt`.
+- **Source:** the recipe downloads FreesmTeam's 2.3.2 source release over
+  HTTPS and pins sha256
+  `a0a87486dc839db9c3591bf5f363b397edecf7a8ec8f694b48f3c978c015e1b8`.
+  The 19,233,731-byte archive I downloaded has that hash. It matches the
+  `digest` GitHub reports for the release asset. The release has no checksum
+  file or detached signature, and the GitHub attestation lookup returns 404.
+  The release workflow does not create a checksum file or sign the archive.
+  **Not sure:** GitHub's server-computed digest confirms the hosted bytes, but
+  it is not an upstream checksum file, signature, or attestation. Hold this
+  update for Daniel's decision on that missing provenance.
+- **Binary attestation:** not applicable. depot builds this source archive;
+  it does not repackage an upstream binary.
+- **Starting recipe:** unchanged from the AUR `freesmlauncher` recipe
+  (`aur.git` commit `fade773`), previously reviewed in the 2.3.1 entry.
+  This PR changes only the version and source sha256 in `package.env` and
+  `arch/PKGBUILD`.
+- **Build and dependencies:** the recipe still uses CMake, Ninja, and `ctest`
+  with Arch's compiler flags. The depot build does not fetch dependencies.
+  Upstream's release workflow includes the submodules in the source archive.
+  The update adds no recipe dependencies or install commands. Upstream raises
+  its Qt minimum to 6.8; `Qt6::Concurrent` was already listed as a component.
+- **Install:** no recipe install script, maintainer script, or trigger. The
+  upstream diff changes no install rules. The existing `allow` paths remain
+  unchanged; no new install path is needed.
+- **Upstream code read:** I compared the actual `2.3.1...2.3.2` tags. The PR
+  body link uses nonexistent `v`-prefixed tags, so I used the unprefixed tag
+  names. The diff adds PNG completeness checks and asynchronous screenshot
+  loading, plus tests with a PNG fixture. It changes Ely.by OAuth to use
+  PKCE S256, updates its client identifier, and fixes the request completion
+  connection. I found no new network endpoint, telemetry, credential export,
+  obfuscated code, or vendored executable. The CodeQL workflow only updates
+  its Qt version; the release workflow is unchanged.
+- **Upstream status:** active and not archived. The repository is owned by
+  FreesmTeam. Release 2.3.2 was published on 2026-11-03, and the release
+  workflow is unchanged from the prior tag.
+- **Reviewed by:** GPT-6 Luna for Daniel, 2026-11-13.
+
 ## 2.3.1-1 (2026-11-03)
 
 - **Why depot ships it:** Daniel's Minecraft launcher on `bridge` (1.9 GB

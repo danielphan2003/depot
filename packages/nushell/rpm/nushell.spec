@@ -4,7 +4,7 @@
 %global __os_install_post %{nil}
 
 Name:           nushell
-Version:        0.116.1
+Version:        0.117.0
 Release:        1%{?dist}
 Summary:        A new type of shell
 License:        MIT
@@ -30,5 +30,8 @@ install -Dm755 nu -t %{buildroot}%{_bindir}
 %{_bindir}/nu
 
 %changelog
+* Tue Nov 10 2026 depot <noreply@github.com> - 0.117.0-1
+- Upstream release 0.117.0.
+
 * Fri Nov 06 2026 depot <noreply@github.com> - 0.116.1-1
 - Upstream release 0.116.1.
