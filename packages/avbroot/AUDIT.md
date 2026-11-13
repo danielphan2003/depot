@@ -3,6 +3,52 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 3.39.1-1 (2026-11-13)
+
+- **Why depot ships it:** patches the Pixel's OTA images for root with
+  Daniel's own AVB keys (the caiman OTA setup on `bridge`). Arch does not
+  package it.
+- **Source:** upstream's x86-64 Linux release asset
+  `https://github.com/chenxiaolong/avbroot/releases/download/v3.39.1/avbroot-3.39.1-x86_64-unknown-linux-gnu.zip`,
+  sha256 `145378039c372a1c80f3d0df7bdbe59b4ca6f612c10949da426278bb8b9994d7`.
+  The downloaded archive has that hash. `gh release verify-asset` verified
+  GitHub's immutable release attestation for this exact asset and tag.
+  `attest=release` is unchanged. It proves that GitHub published these bytes
+  with the release, not that CI built them from the tag's source.
+- **Starting recipe:** the PR keeps the same release asset and
+  `attest=release`. It updates the version and sha256, and resets `pkgrel`
+  from 2 to 1 for the new upstream version.
+- **Binary:** static-pie x86-64, with no shared libraries or runtime
+  dependencies. The release CI now targets x86-64-v2, which does not require
+  AVX. The recipe still declares `x86_64`; Daniel needs to confirm that this
+  CPU baseline matches depot's supported machines.
+- **Build and dependencies:** depot repackages the upstream binary and does
+  not build it. Upstream CI runs Cargo through `cargo-android`, which forwards
+  commands to Cargo. CI downloads that helper at tag `v0.1.6` and installs
+  target toolchains. `Cargo.lock` pins the crate versions and checksums, but
+  CI invokes `cargo android build` without `--locked` or `--frozen`. **No:**
+  the upstream build does not refuse lockfile changes. The update adds
+  `winnow-args` 0.6.1, published on crates.io by Luca Barbato (`lu-zero`),
+  plus `winnow-args-derive` 0.6.1 from the same publisher and
+  `terminal_size` 0.4.4 from Andrew Chin (`eminence`). Daniel needs to approve
+  these new dependency publishers before this update can merge.
+- **Upstream code read:** I compared `v3.37.1...v3.39.1`. The diff replaces
+  Clap with `winnow-args` across the CLI, updates cryptography crates, and
+  recomputes boot-image SHA-1 IDs when the original ID matches the checksum.
+  The changelog also describes the x86-64 baseline change and an image ID fix.
+  It also removes the old RSA advisory exception after updating RSA. I found
+  no new application network access, telemetry, credential export, obfuscated
+  code, or vendored binary blobs. The CI workflow changes CPU flags and its
+  ARM runner, and adds a `libc6-dev` reinstall to avoid amd64v3 static libraries.
+  The release workflow updates its pinned `action-gh-release` version.
+- **Install:** no install script, units, or triggers. The recipe still installs
+  `/usr/bin/avbroot`, its README, and its license. No `allow` entry or new
+  install path is needed.
+- **Upstream status:** active and not archived, with the same owner,
+  `chenxiaolong`. Release 3.39.1 was published on 2026-11-10. The release
+  workflow changed only its pinned `action-gh-release` version.
+- **Reviewed by:** GPT-6 Luna for Daniel, 2026-11-13.
+
 ## 3.37.1-2 (2026-11-09)
 
 - **Change:** upstream's release binary instead of a source build (Daniel,
