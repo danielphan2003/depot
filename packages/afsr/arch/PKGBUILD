@@ -1,0 +1,17 @@
+# Maintainer: depot <https://github.com/danielphan2003/depot>
+# Upstream's static release binary, repackaged; nothing is compiled. lint.sh
+# checks GitHub's release attestation for the pinned file; see ../AUDIT.md.
+pkgname=afsr
+pkgver=2.1.1
+pkgrel=1
+pkgdesc='Unpack, modify and repack Android ext4 and erofs filesystem images reproducibly'
+arch=('x86_64')
+url='https://github.com/chenxiaolong/afsr'
+license=('GPL-2.0-or-later')
+options=('!strip' '!debug')
+source=("$url/releases/download/v$pkgver/afsr-$pkgver-x86_64-unknown-linux-gnu.zip")
+sha256sums=('cf442165f1c16d52f699e10f92746bdcd3353649dcaaa4d228629a9fe92dccf0')
+
+package() {
+  install -Dm755 afsr -t "$pkgdir/usr/bin"
+}

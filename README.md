@@ -34,12 +34,13 @@ breakage is caught.
 | --- | --- | --- | --- |
 | [`age-plugin-fido2-hmac`](packages/age-plugin-fido2-hmac) | 0.5.0 | all | lets age decrypt with a FIDO2 key |
 | [`atuin`](packages/atuin) | 18.24.6 | debian-trixie, fedora-44 | shell history database; upstream's attested binary; Arch ships it, and Debian's older one is replaced only on machines that opt in (see its `allow`) |
-| [`avbroot`](packages/avbroot) | 3.37.1 | arch | patches Android OTA images for root; upstream's attested binary |
+| [`afsr`](packages/afsr) | 2.1.1 | arch, fedora-44 | unpacks and repacks Android ext4 and erofs images for the OTA patcher; upstream's attested binary |
+| [`avbroot`](packages/avbroot) | 3.39.1 | arch, fedora-44 | patches Android OTA images for root; upstream's attested binary |
 | [`bun`](packages/bun) | 1.4.4 | debian-trixie, fedora-44 | JavaScript runtime; upstream's binary, Arch ships it |
 | [`carapace`](packages/carapace) | 1.8.2 | all | shell completion engine |
-| [`custota-tool`](packages/custota-tool) | 6.8 | arch | signs Custota OTA update metadata; upstream's attested binary |
+| [`custota-tool`](packages/custota-tool) | 6.10 | arch, fedora-44 | signs Custota OTA update metadata; upstream's attested binary |
 | [`dpibreak`](packages/dpibreak) | 0.6.2 | arch, fedora-44 | system-wide DPI circumvention |
-| [`dufs`](packages/dufs) | 0.47.0 | arch | small file server |
+| [`dufs`](packages/dufs) | 0.47.0 | arch, fedora-44 | small file server |
 | [`ente-cli`](packages/ente-cli) | 0.4.2 | arch | Ente command-line client; upstream's attested binary |
 | [`fcitx5-lotus`](packages/fcitx5-lotus) | 6.0.4 | arch | Vietnamese input method, with its uinput server (see its `allow`); upstream's attested binary |
 | [`flyctl`](packages/flyctl) | 0.5.2 | arch | Fly.io command-line client |
@@ -53,7 +54,7 @@ breakage is caught.
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
 | [`zellij`](packages/zellij) | 0.45.1 | debian-trixie, fedora-44 | terminal multiplexer; upstream's static binary |
 
-Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums. A package whose upstream binary carries a GitHub attestation uses that binary (Daniel, 2026-11-09), and `lint.sh` checks the attestation for the pinned file (`attest=` in `package.env`): `avbroot`, `custota-tool`, `ente-cli` and `railway-cli` have GitHub's release attestation, which proves the file is the asset upstream published with the tag, and `atuin` and `fcitx5-lotus` have SLSA build provenance, which proves upstream's workflow built it from the tag.
+Only packages Daniel asked for go in here. Recipes build from source unless upstream's own release binary will do (Daniel, 2026-11-06): `bun`, `nodejs-latest`, `nushell` and `zellij` repackage upstream's binaries, pinned by sha256 and checked against upstream's checksums. A package whose upstream binary carries a GitHub attestation uses that binary (Daniel, 2026-11-09), and `lint.sh` checks the attestation for the pinned file (`attest=` in `package.env`): `afsr`, `avbroot`, `custota-tool`, `ente-cli` and `railway-cli` have GitHub's release attestation, which proves the file is the asset upstream published with the tag, and `atuin` and `fcitx5-lotus` have SLSA build provenance, which proves upstream's workflow built it from the tag.
 
 ## Layout
 

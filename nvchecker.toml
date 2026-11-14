@@ -8,6 +8,12 @@ github = "olastor/age-plugin-fido2-hmac"
 use_latest_release = true
 prefix = "v"
 
+[afsr]
+source = "github"
+github = "chenxiaolong/afsr"
+use_latest_release = true
+prefix = "v"
+
 [avbroot]
 source = "github"
 github = "chenxiaolong/avbroot"
