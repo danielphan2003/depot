@@ -3,6 +3,50 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 6.1.0-1, source re-pinned (2026-11-14)
+
+- **Change:** `package.env` and the PKGBUILD now pin sha256
+  `f7fff1869932d3da25b10943f0e88f6a180f7cbad6a1ff058af90e642127bf36`
+  instead of `c0ea1f9b...19c2`. The version and release stay 6.1.0-1.
+  `publish.sh` never replaces a published file name, so the package
+  machines install stays the one built on 2026-11-13 at 08:08 UTC from the
+  original file. This entry was written for that package. The new pin makes
+  lint and rebuilds match what upstream serves now (Daniel, 2026-11-14).
+- **What happened:** upstream's v6.1.0 release is mutable, not immutable.
+  Its tag run (`build-and-release.yml`, run 43131106921) had three attempts,
+  all on commit `f3b76c6`, the tag's commit. Attempt 1 (2026-11-12) built
+  the pinned file, and its `DEB [sid]` job failed. Attempt 2 (2026-11-13
+  11:43 UTC) re-ran only that job. Their openSUSE repository, which the same
+  workflow deploys, then broke (upstream issue #692), and the maintainer
+  re-ran every job as attempt 3 (12:51 UTC) to redeploy it. That rebuilt the
+  Arch tarball, and every release asset was uploaded again by
+  `github-actions[bot]` at 12:54:49 UTC. Lint then failed on the sha256
+  mismatch. Its attestation error came from that mismatch: the file was never
+  fetched, so the attestation check never ran.
+- **Why the bytes differ:** upstream's Arch job is not reproducible. It
+  builds in a floating `archlinux:latest` after `pacman -Syu`, and tars the
+  tree with its real mtimes and no `SOURCE_DATE_EPOCH`. Any full re-run
+  gives a new hash.
+- **Attestation:** the new file has its own SLSA build provenance, signed
+  for `build-and-release.yml@refs/tags/v6.1.0`, commit `f3b76c6`,
+  invocation `.../runs/43131106921/attempts/3`, GitHub-hosted runner.
+  `gh attestation verify` with `--signer-workflow` and `--source-ref`, the
+  check `lint.sh` runs, succeeded. The original file's provenance
+  (`attempts/1`) is still on record.
+- **Contents compared** (extracted, never run) with the published
+  `fcitx5-lotus-6.1.0-1-x86_64.pkg.tar.zst`, whose signature checks against
+  depot's key. The `usr/` trees hold the same 134 files with the same modes.
+  `liblotus.so`, `fcitx5-lotus-server` and every other non-bytecode file are
+  byte-identical. The only differences are in the 38 `.pyc` files of the
+  settings GUI, and only in bytes 9 to 11, the source-mtime field of the
+  header: 2026-11-12 00:59:21 UTC in the old file and 2026-11-13 12:51:27
+  UTC in the new one, the checkout times of the two runs. No code changed.
+- **Allowed paths:** unchanged.
+- **Follow-up:** upstream releases are mutable and their builds are not
+  reproducible, so a re-run can break this pin again. The newer 6.1.1 needs
+  its own audit.
+- **Reviewed by:** Claude (Opus 5.5) for Daniel, 2026-11-14.
+
 ## 6.1.0-1 (2026-11-13)
 
 - **Why depot ships it:** Daniel's Vietnamese input method on `bridge`
