@@ -3,6 +3,18 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+
+## 6.10-1, fedora-44 (2026-11-14)
+
+- **Change:** a `fedora-44` recipe (`rpm/custota-tool.spec`) so the OTA
+  patcher can run in a Fedora toolbox on Daniel's server
+  (2026-11-14). Same release asset, sha256 and attestation as the Arch recipe
+  in 6.10-1 below; upstream code unchanged.
+- **Install:** `/usr/bin/custota-tool` only, as on Arch. No `%pre`, `%post`
+  or triggers; rpm's post-install processing is off, so the binary is
+  installed byte for byte.
+- **Reviewed by:** Claude (Opus 5.5) for Daniel, 2026-11-14.
+
 ## 6.10-1 (2026-11-13)
 
 - **Why depot ships it:** generates the signed update metadata the Custota

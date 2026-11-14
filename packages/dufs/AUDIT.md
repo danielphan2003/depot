@@ -3,6 +3,20 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+
+## 0.47.0-1, fedora-44 (2026-11-14)
+
+- **Change:** a `fedora-44` recipe (`rpm/dufs.spec`) so Daniel's server can
+  serve the OTA directory to the phone (2026-11-14). Same tag
+  tarball and sha256 as the Arch recipe below; upstream code unchanged.
+- **Build:** `cargo build --locked --release` with Fedora's Rust flags
+  (`%{build_rustflags}`: hardening, PIE), as in `starship`. Crates come from
+  crates.io during the build, pinned by upstream's `Cargo.lock`, and
+  `--locked` refuses to change it.
+- **Install:** `/usr/bin/dufs`, the README and both licenses. As on Arch, no
+  units, config, completions, `%pre`, `%post` or triggers.
+- **Reviewed by:** Claude (Opus 5.5) for Daniel, 2026-11-14.
+
 ## 0.47.0-1 (2026-11-03)
 
 - **Why depot ships it:** serves the Pixel OTA directory to the phone

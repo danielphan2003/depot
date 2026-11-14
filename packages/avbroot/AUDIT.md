@@ -3,6 +3,19 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+
+## 3.39.1-1, fedora-44 (2026-11-14)
+
+- **Change:** a `fedora-44` recipe (`rpm/avbroot.spec`) so the OTA patcher
+  can run in a Fedora toolbox on Daniel's server (2026-11-14). It
+  repackages the same release asset, sha256 and attestation as the Arch
+  recipe in 3.39.1-1 below; upstream code unchanged.
+- **Install:** `/usr/bin/avbroot`, `README.md` and `LICENSE`, as on Arch. No
+  `%pre`, `%post` or triggers; rpm's post-install processing is off
+  (`__os_install_post`), as in `railway-cli`, so the binary is installed
+  byte for byte.
+- **Reviewed by:** Claude (Opus 5.5) for Daniel, 2026-11-14.
+
 ## 3.39.1-1 (2026-11-13)
 
 - **Why depot ships it:** patches the Pixel's OTA images for root with
