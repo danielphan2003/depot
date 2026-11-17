@@ -3,6 +3,61 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 6.1.1-1 (2026-11-17)
+
+- **Change:** upstream's 6.1.1 release, on the same recipe: the Arch release
+  build, repackaged, nothing compiled here. The bump only moves `package.env`
+  and `arch/PKGBUILD` to the new tag and its sha256.
+- **Source:** upstream's Arch release build
+  `https://github.com/LotusInputMethod/fcitx5-lotus/releases/download/v6.1.1/fcitx5-lotus-v6.1.1-x86_64-archlinux.tar.zst`,
+  sha256 `3acc1a75ea14bb6d3a4a0cb56e34dd1fb17c68fa5ce33aef89642ef3cb295921`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset, uploaded by `github-actions[bot]` with the
+  release on 2026-11-14. The project's own organization, not a fork or a
+  mirror.
+- **Attestation:** SLSA build provenance signed for
+  `LotusInputMethod/fcitx5-lotus/.github/workflows/build-and-release.yml`
+  run for `refs/tags/v6.1.1`; `gh attestation verify` with
+  `--signer-workflow` and `--source-ref` succeeded for the pinned file.
+  `lint.sh` repeats that check on every run.
+- **Tag:** `v6.1.1` is lightweight, as `v6.1.0` was, and points at commit
+  `b500a60`, the merge of PR #694 from `dev`, which GitHub signed as
+  `web-flow` and reports as verified. The diff I read is exactly
+  `v6.1.0...v6.1.1`.
+- **Contents compared** (extracted, never run) with the 6.1.0 archive: the
+  same 186-entry file list, so no new install path appears. 42 files differ:
+  `liblotus.so` (rebuilt), `addon/lotus.conf`, the settings GUI's
+  `version.py` and the metainfo XML (version strings only), and the 38 `.pyc`
+  files of the settings GUI, which differ only in bytes 9 and 10, the
+  source-mtime field of the header. Every Python source, icon, dictionary,
+  unit, sysusers, udev and modules-load file is byte-identical.
+- **Binary:** `liblotus.so` and `fcitx5-lotus-server` link the same
+  libraries as in 6.1.0, so the runtime `depends` list is unchanged. The
+  binaries are upstream's Arch build, so a soname bump shows up in the
+  canary, as with 6.0.4-2.
+- **Allowed paths:** unchanged. Nothing new is installed outside the paths
+  Daniel approved on 2026-11-03, and no `allow` line was needed. `etc/runit`
+  and `etc/init.d` in the archive stay out of the package, as before, and
+  there is still no install script.
+- **Upstream code read:** I read the `v6.1.0...v6.1.1` diff, 13 files. It
+  fixes the Shift state on the wlr virtual-keyboard backend: the addon now
+  records the user's physical Shift (`setUserShift`) and mirrors it when it
+  uploads a keymap or finishes a selection burst, so forwarded keys keep the
+  user's Shift. It also buffers keys typed while a deferred commit is pending
+  and gives the wlr and X11 backends the replacement pre-delay instead of
+  emitting immediately, with a new regression phase in
+  `test/dbus-deferred-commit.cpp`. The rest is version strings and CI: the
+  Arch, Alpine, Debian, Fedora, openSUSE and Nix build inputs gain `xvfb` so
+  the tests can run headless, and the openSUSE spec now gates its tests.
+  No new network access, telemetry, credential handling, install rule,
+  vendored binary or build-script change; the workflow's only edit is the
+  `xvfb` package in its dependency list.
+- **Upstream status:** active and not archived, same `LotusInputMethod`
+  organization, same release workflow. As noted for 6.1.0, the release build
+  is not reproducible and its assets stay mutable, so a re-run can break the
+  pin again; the canary and lint would catch it.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-17.
+
 ## 6.1.0-1, source re-pinned (2026-11-14)
 
 - **Change:** `package.env` and the PKGBUILD now pin sha256
