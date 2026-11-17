@@ -6,7 +6,7 @@
 %global __os_install_post %{nil}
 
 Name:           railway-cli
-Version:        5.74.0
+Version:        5.74.1
 Release:        1%{?dist}
 Summary:        Railway command-line client
 License:        MIT
@@ -30,6 +30,9 @@ install -Dm755 railway -t %{buildroot}%{_bindir}
 %{_bindir}/railway
 
 %changelog
+* Tue Nov 17 2026 depot <noreply@github.com> - 5.74.1-1
+- Upstream release 5.74.1.
+
 * Fri Nov 13 2026 depot <noreply@github.com> - 5.74.0-1
 - Upstream release 5.74.0.
 
