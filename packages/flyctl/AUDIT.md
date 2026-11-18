@@ -3,6 +3,59 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.5.12-1 (2026-11-18)
+
+- **Change:** upstream's 0.5.12, one release on from 0.5.11. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.12.tar.gz`,
+  sha256 `daafb46bf59dac2ad44eebea3db6d1deb0cd9bb835d8b890c9ac43af79885c70`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.12_checksums.txt` lists the release binaries, not this tag
+  tarball, and the tag is lightweight (it points straight at commit
+  `23da327392fa656fa77433b18fc37bbbd164e88b`, which GitHub reports as
+  verified). GitHub's attestation lookup for the archive answers 404. So I
+  checked the archive against the tag commit's tree instead: all 1122 files it
+  holds are byte-identical (same blob hash, no extra or missing file) to that
+  commit's tree, so the tarball is exactly the tag's tree as GitHub generated
+  it from `superfly/flyctl`.
+- **Build and dependencies:** unchanged. Go from source with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local`, `CGO_ENABLED=0` and upstream's
+  `production` tag and ldflags; makepkg supplies the distribution's flags.
+  `go generate ./...` runs genqlient against the bundled `gql/schema.graphql`
+  and mockgen, both pinned in `go.mod`. Neither `go.mod` nor `go.sum` appears
+  in the diff, so no module was added, removed or bumped: no new dependency
+  publisher.
+- **Upstream code read:** I compared `v0.5.11...v0.5.12`, 6 commits and 56
+  files, reading the patches rather than the changelog. It adds a
+  `[[cache_disk]]` machine feature (a fly.toml section, `--cache-disk-size`
+  and `--cache-disk-path` on `machine run`/`create`/`update`, the same
+  arguments in the MCP tools, a cache disk column in `machine status`);
+  `machine start --wait`; `deploy --rollback`, which only renames the span and
+  requires `--image`; managed Postgres `dev-256` as a hidden plan and
+  `--volume-size` no longer defaulted to 10 GB; and a
+  `[[cache_disk]]`-aware scale path. Tracing grows: more commands get workflow
+  spans (`machine start`/`update`, `mpg restore`, `volumes create`/`extend`,
+  `certs add`, `ips allocate`, `ssh console`) through the existing trace
+  exporter, and a hidden `fly trace run -- <command>` runs a child process and
+  passes it `FLYCTL_TRACEPARENT`/`FLYCTL_TRACESTATE`, reading them back from
+  the environment in a child flyctl; span errors stay status-only as before, so
+  no new field carries command output. In token-mode WireGuard, a tunnel now
+  sends WireGuard to the gateway's own direct IP over UDP when the gateway
+  offers one, keeping the websocket for the token exchange and reconnects:
+  same Fly gateway, new transport, with a fallback to the websocket proxy when
+  there is no direct IP. Launch also stops writing `memory_mb` beside
+  `memory`. No new network destination, no new telemetry payload, no
+  credential handling change, no vendored or obfuscated blob, and no change to
+  the Makefile, `.goreleaser.yml` or the release workflow.
+- **Install:** unchanged. No install script, units or triggers; the recipe
+  still installs `/usr/bin/flyctl`, its `fly` wrapper, the README and the
+  license. No `allow` entry or new install path is needed.
+- **Upstream status:** active and not archived, same owner `superfly`, same
+  release workflow (releases published by `github-actions[bot]`). 0.5.12 was
+  published on 2026-11-17.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-18.
+
 ## 0.5.11-1 (2026-11-17)
 
 - **Change:** upstream's 0.5.11, three releases on from 0.5.8 (0.5.9 and
