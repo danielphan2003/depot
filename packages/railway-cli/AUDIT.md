@@ -3,6 +3,83 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 5.75.0-1 (2026-11-18)
+
+- **Change:** upstream's 5.75.0, one release on from 5.74.1. The bump moves
+  `package.env`, `arch/PKGBUILD` and `rpm/railway-cli.spec` to the new tag,
+  its sha256 and a spec changelog line; nothing else changes.
+- **Source:** upstream's static release binary:
+  `https://github.com/railwayapp/cli/releases/download/v5.75.0/railway-v5.75.0-x86_64-unknown-linux-musl.tar.gz`,
+  sha256 `ba5d9fb5dce1c59789f4216e6b754becd75025ed740388452be55aae83720400`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset, which `github-actions[bot]` uploaded with the
+  release on 2026-11-17. The project's own organization, `railwayapp`.
+- **Attestation:** `attest=release`; `gh release verify-asset v5.75.0` for the
+  pinned file succeeded ("present in release v5.75.0"). I checked what else
+  the digest carries: GitHub holds one attestation for it, of type
+  `https://in-toto.io/attestation/release/v0.2` (the immutable-release
+  statement naming every asset), and no SLSA build provenance, so `release`
+  is the strongest attestation upstream offers here. `lint.sh` repeats the
+  check. `v5.75.0` is an unsigned annotated tag object created by
+  `github-actions[bot]`, pointing at the unsigned release commit `f3aa334`;
+  the release attestation, not the tag, is what the recipe pins.
+- **Binary:** static-pie (musl), x86-64, stripped by upstream, no shared
+  libraries, and still one file in the archive (`railway`, mode 0755, no
+  README or license). 21661112 bytes against 21636536 for 5.74.1.
+- **Build and dependencies:** none in depot. `Cargo.lock` changes only the
+  `railwayapp` package version; no crate was added, removed or bumped, so no
+  new dependency publisher. `Cargo.toml` and `package.json` change the version
+  string only. No `.github`, `Makefile` or build-script file appears in the
+  diff.
+- **Upstream code read:** I read the whole `v5.74.1...v5.75.0` diff, 4 commits
+  and 30 files, plus the one-line change to `src/gql/schema.json` (a
+  `cloudAgent.region` field added, `baseImageDigest` dropped from the sandbox
+  template input). It takes cloud agents and sandboxes out of experimental:
+  - The "experimental" warnings and the `CLOUD_AGENTS` feature-flag preflight
+    are gone (`src/commands/cloud_agent/access.rs`, its `CloudAgentAccess`
+    query and its `flag_missing` telemetry event are deleted). Telemetry
+    shrinks; nothing is added.
+  - Agents now sleep on their own: after 5 idle minutes (no SSH client,
+    almost no network traffic, no coding agent working or waiting) the
+    platform stops compute, which ends running processes and keeps the disk,
+    and connecting wakes it. Agents created before the 2026-10-08 deploy keep
+    the spec they were created with and never do. The CLI only reads that from
+    age (`ca::sleeps_when_idle`, cutoff `2026-10-08T00:37:00Z`) to word its
+    messages. `--keep-awake` is now accepted and ignored, `ca sleep` reads the
+    status first and skips the pre-sleep SSH flush for an agent that is not
+    running (an SSH connection would wake it), and `ca sleep --all` acts only
+    on running agents. This is a product behaviour change on Railway's own
+    platform, not something depot installs.
+  - Sandboxes and agents now print one shared create and disconnect block
+    (`src/commands/output/machine.rs`); `ca create --json` gains `region` and
+    `domains` from a new `CloudAgentPlacement` query against the same
+    backboard, and the `Sandbox` query gains `region`, `environmentId`,
+    `createdAt`, `idleTimeoutMinutes` and `domains`. `sandbox create` and
+    `sandbox fork` wait for RUNNING by default (5 minute cap, 0.5s to 2s
+    polls) with a new `--no-wait`; `--base-image-digest` is retired, hidden
+    and refused with an explanation, and a template stored with one is
+    refused by name instead of sending a checkpoint that was never built.
+  - The Python bootstrap scripts that run on the agent VM (`codex.py`,
+    `opencode.py`) now find the process listening on the server port through
+    `/proc/net/tcp` and `/proc/*/fd`, and adopt a server that express-agent
+    restarted after a power-off. Adoption only happens when that listener
+    accepts the saved token (or, for OpenCode, the saved credentials and
+    refuses requests without them), and only `inspect` treats it as
+    read-only; the others save the new PID and process group. All of it is
+    local to the VM: no new network destination, no credential sent anywhere
+    new.
+  No vendored or obfuscated blob, no `curl | sh`, no change to the Makefile,
+  the release workflow or CI. I compared the URL and host strings of the
+  5.74.1 and 5.75.0 binaries: the same set (Railway's API and backboard, MCP,
+  GitHub, raw.githubusercontent, npm, docs), and the only "new" hits are
+  adjacent string literals from the string table, not hosts.
+- **Install:** `/usr/bin/railway` only. No scriptlets, units, links or
+  additional paths, so no `allow` entry is needed and none changed.
+- **Upstream status:** active and not archived, same owner `railwayapp`, same
+  release workflow (releases published by `github-actions[bot]`); 5.75.0 was
+  published on 2026-11-17.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-18.
+
 ## 5.74.1-1 (2026-11-17)
 
 - **Change:** upstream's 5.74.1, one release on from 5.74.0. The bump moves
