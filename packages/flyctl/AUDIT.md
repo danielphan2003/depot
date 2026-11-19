@@ -3,6 +3,52 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.5.13-1 (2026-11-19)
+
+- **Change:** upstream's 0.5.13, one release on from 0.5.12. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.13.tar.gz`,
+  sha256 `0166b205742b884df5d5314b303ea97e6f38aa2280f8b67420c8cd273174f48a`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.13_checksums.txt` lists the release binaries, not this tag
+  tarball, and the tag is lightweight (it points straight at commit
+  `4d21aedc1d751d4d22907298008d615ff8e8d539`, which GitHub reports as
+  verified). GitHub's attestation lookup for the archive answers 404. So I
+  checked the archive against the tag commit's tree instead: all 1124 files it
+  holds are byte-identical (same blob hash, no extra or missing file) to that
+  commit's tree, so the tarball is exactly the tag's tree as GitHub generated
+  it from `superfly/flyctl`.
+- **Build and dependencies:** unchanged. Go from source with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local`, `CGO_ENABLED=0` and upstream's
+  `production` tag and ldflags; makepkg supplies the distribution's flags.
+  `go generate ./...` runs genqlient against the bundled `gql/schema.graphql`
+  and mockgen, both pinned in `go.mod`. Neither `go.mod` nor `go.sum` appears
+  in the diff, so no module was added, removed or bumped: no new dependency
+  publisher.
+- **Upstream code read:** I compared `v0.5.12...v0.5.13`, 3 commits and 13
+  files, reading the patches rather than the changelog. `fly wireguard list`
+  now also shows token-mode tunnels that this machine's agent holds: a new
+  `tunnels` command on the agent's local socket returns their name, peer IP
+  and endpoint, and the CLI prints them in a second table, or appends them to
+  the JSON rows. A missing or older agent is a warning, not an error, and the
+  command never starts an agent. The personal org is asked for by its real
+  slug. `fly orgs show` gets a spelling fix and singular grammar for one
+  member. `machine restart`/`wait` no longer panics when a Machine has no
+  config. `wg/state.go` corrects swapped `localpublic`/`localprivate` JSON tags
+  in the WireGuard state file, so a state file written by an older flyctl reads
+  its two keys the other way round; the next reconnect rewrites it. No new
+  network destination (the new command is a local socket, and it builds no
+  tunnel), no new telemetry payload, no credential handling change, no
+  vendored or obfuscated blob, and no change to the Makefile,
+  `.goreleaser.yml` or the release workflow.
+- **Install:** unchanged. No install script, units or triggers; the recipe
+  still installs `/usr/bin/flyctl`, its `fly` wrapper, the README and the
+  license. No `allow` entry or new install path is needed.
+- **Upstream status:** active and not archived, same owner `superfly`, same
+  release workflow. 0.5.13 was published on 2026-11-18.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-19.
+
 ## 0.5.12-1 (2026-11-18)
 
 - **Change:** upstream's 0.5.12, one release on from 0.5.11. The recipe is
