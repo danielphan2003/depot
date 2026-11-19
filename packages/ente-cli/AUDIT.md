@@ -3,6 +3,60 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.4.5-1 (2026-11-19)
+
+- **Why depot ships it:** Ente's command-line client for exports and account
+  tools; Daniel uses Ente Photos. Arch does not package it.
+- **Why a binary:** the earlier source build linked system dbus, OpenSSL, and
+  SQLCipher. The upstream binary carries those libraries and has a GitHub
+  release attestation.
+- **Source:** upstream's Linux x86-64 release asset
+  `https://github.com/ente/ente/releases/download/ente-cli-v0.4.5/ente-cli-v0.4.5-linux-amd64.tar.gz`,
+  sha256 `4890dc2b27510d0e2f9e7ee5d47bf1f274e145f79d5557aef1d24b3103fadbbe`.
+  The downloaded archive matches the recipe and the `SHA256SUMS` entry, and
+  it holds the `ente` binary alone. `gh release verify-asset` verified
+  GitHub's immutable release attestation for this exact asset and tag, and
+  the release is marked immutable. `attest=release` is unchanged. The
+  attestation proves GitHub published these bytes with the release, not that
+  CI built them from the tag's source.
+- **Starting recipe:** the PR moves the version and sha256 from 0.4.4 to
+  0.4.5. `pkgrel` stays at 1, and it changes no install commands or paths.
+- **Build and dependencies:** depot repackages the binary and does not build
+  it. Upstream CI still runs `cargo build --locked --release -p ente-cli
+  --bin ente`, so Cargo uses the upstream lockfile and refuses lockfile
+  changes. The CLI manifest gains no dependency. The update does add two
+  dependencies to the workspace, both in `ente-image`, which the CLI links
+  through `ente-photos`: `zune-jpeg`, pinned to commit `2f9086b` of
+  `github.com/etemesi254/zune-image` (the author of the crates.io
+  `zune-jpeg`, already a transitive dependency), which brings `zune-core`
+  from the same commit; and `jpeg-encoder`, a dev-dependency, so it is not in
+  the binary. `heic_decoder` moves to a newer commit in Ente's own
+  `ente/heic-decoder` repository. Every git dependency is pinned by revision
+  in the lock file. The other lock changes are crates.io version bumps
+  (`rand`, `reqwest`, `async-trait`, `postgresql_*`), so no new publisher
+  enters the build.
+- **Upstream code read:** I compared the actual tags `ente-cli-v0.4.4` and
+  `ente-cli-v0.4.5` (the PR body link omits the `ente-cli-` prefix): 912
+  files, almost all of them mobile, web, desktop and docs. The CLI change
+  adds `photos file list --near LAT,LON --radius KM`, which keeps files
+  within a distance of a point, using the same check as location tags in the
+  Ente apps; it needs no downloaded location data and no network access. The
+  shared `ente-location` crate gains the distance helper. `ente-image` gains
+  a JPEG decoder built on the pinned `zune-jpeg`; it reads local files and
+  adds no network, process or credential code. The old Go CLI's
+  `cli/pkg/account.go` clears local sync state when an account's export
+  directory changes, but depot builds the Rust CLI, not this one. I found no
+  new network destination, no automatic telemetry, and no obfuscated code or
+  vendored executable.
+- **Upstream status:** active and not archived, with owner `ente`, unchanged.
+  Release 0.4.5 was published on 2026-11-18. `ente-cli-release.yml` and the
+  CLI test workflow are unchanged between the two tags, so the release
+  process is the one Daniel accepted for 0.4.4.
+- **Install:** no install script, units, or triggers. The recipe still
+  installs only `/usr/bin/ente`; no `allow` entry or new install path is
+  needed.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-19.
+
 ## 0.4.4-1 (2026-11-13)
 
 - **Why depot ships it:** Ente's command-line client for exports and account
