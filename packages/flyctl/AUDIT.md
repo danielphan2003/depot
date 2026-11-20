@@ -3,6 +3,71 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.5.14-1 (2026-11-20)
+
+- **Change:** upstream's 0.5.14, one release on from 0.5.13. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.14.tar.gz`,
+  sha256 `94e239fb2be22e652b5c3845af7aba95e958ba8fa482defb83ccc671d85f6bf1`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.14_checksums.txt` lists the release binaries, not this tag
+  tarball, and the tag is lightweight (it points straight at commit
+  `a05c794575d1c88084c240ee0224a0b14f5287ef`). GitHub's attestation lookup for
+  the archive answers 404. So I checked the archive against the tag commit's
+  tree instead: all 1127 files it holds are byte-identical (same blob hash, no
+  extra or missing file) to that commit's tree, so the tarball is exactly the
+  tag's tree as GitHub generated it from `superfly/flyctl`. As for 0.5.10,
+  which Daniel approved on 2026-11-13, no upstream checksum or build
+  attestation covers the source archive, and the pinned hash is the recipe's
+  only archive hash.
+- **Build and dependencies:** unchanged. Go from source with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local`, `CGO_ENABLED=0` and upstream's
+  `production` tag and ldflags; makepkg supplies the distribution's flags.
+  `go generate ./...` runs genqlient against the bundled `gql/schema.graphql`
+  and mockgen, both pinned in `go.mod`. Neither `go.mod` nor `go.sum` appears
+  in the diff, so no module was added, removed or bumped: no new dependency
+  publisher. The Makefile, `.goreleaser.yml`, `Dockerfile` and `.github/` are
+  untouched too.
+- **Upstream code read:** I compared `v0.5.13...v0.5.14`, 7 commits and 20
+  files, reading the patches rather than the changelog.
+  - `ssh console` now checks the credentials the Machines client actually
+    sends. `RequireFlapsSession` runs the login and token monitoring as
+    `RequireSession` did, then fails the command when the initial discharge
+    refresh errored and every permission macaroon in the Machines credential
+    still lacks a discharge, instead of letting it go on to an unauthorized
+    API call. `MonitorTokens` now also returns that initial discharge error,
+    and the agent server, which has no user to tell, discards it.
+  - `ssh console` errors gain fixed codes for the workflow spans
+    (`internal/tracing/workflow_error.go`): a new `workflow.error.code`
+    attribute carrying a name from a closed vocabulary (`ssh_machine_not_found`,
+    `ssh_container_prompt_failed` and so on), never the error text or a caller's
+    input. A joined failure with mixed causes stays `unknown`, and context
+    cancellation is recorded as `canceled` or `deadline_exceeded` without
+    assuming the user did it. The codes are the only new telemetry payload.
+  - `machine start` treats the Machines API's 409 "machine still attempting to
+    start" as a start in progress: it waits for the version it asked for, up to
+    a minute, and skips the later `--wait` phase it has already done. Any other
+    error, or a machine with no version, still fails.
+  - Remote builders that are already `starting` are waited for (a minute's
+    budget) instead of being started again, and the wait's error no longer says
+    "after restart".
+  - Each `fly deploy` lease-acquisition span is now ended (it leaked before) and
+    records its error through `RecordError`.
+  - A release-command exit-event read is capped at 30 seconds so one stalled
+    Machines GET leaves time for another poll; a cancelled or timed-out wait now
+    reports the wait's own error instead of the failed read's.
+  - Laravel detection builds its assets on Node 22 rather than 18.
+  - No new network destination, no new telemetry payload beyond the error-code
+    attribute above, no credential handling change, no vendored or obfuscated
+    blob, and no change to the build.
+- **Install:** unchanged. No install script, units or triggers; the recipe
+  still installs `/usr/bin/flyctl`, its `fly` wrapper, the README and the
+  license. No `allow` entry or new install path is needed.
+- **Upstream status:** active and not archived, same owner `superfly`, same
+  release workflow. 0.5.14 was published on 2026-11-19.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-20.
+
 ## 0.5.13-1 (2026-11-19)
 
 - **Change:** upstream's 0.5.13, one release on from 0.5.12. The recipe is
