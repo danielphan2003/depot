@@ -3,6 +3,74 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 18.25.0-1 (2026-11-20)
+
+- **Change:** upstream's 18.25.0, one release on from 18.24.8. The recipes
+  are unchanged apart from the version: `package.env`'s version and sha256,
+  the rpm spec's `Version` and changelog, and the deb changelog. `attest=`,
+  the shape of `source_url`, `allow` and `test.sh` stay as they were.
+- **Source:** the same musl release archive,
+  `https://github.com/atuinsh/atuin/releases/download/v18.25.0/atuin-x86_64-unknown-linux-musl.tar.gz`,
+  sha256 `9ebfb49d9f5cc5fb03588315f8f54277fe9e3648bd98de7666a350000670cd19`.
+  The archive I downloaded has that hash, and it is the line the release's
+  `sha256.sum` and the asset's own `.sha256` file carry.
+- **Attestation:** SLSA build provenance (`https://slsa.dev/provenance/v1`)
+  from `atuinsh/atuin/.github/workflows/release.yml@refs/tags/v18.25.0`,
+  verified for the archive with `gh attestation verify` (exit 0). The workflow
+  file is unchanged in this diff; only `publish-winget.yml` moved, which
+  rewrites the WinGet manifests and does not build the asset.
+- **Binary:** static-pie (musl), x86-64, stripped, with no interpreter or
+  shared libraries, 59 MB. The archive holds `atuin`, `CHANGELOG.md`,
+  `LICENSE` and `README.md`, the same four entries as before.
+- **Build and dependencies:** none. The recipes unpack the archive and install
+  the binary, with no network access beyond the pinned download. Upstream's
+  build moved its date handling from `chrono`/`time` to `jiff`: new are
+  `jiff` 1.0.1 with `jiff-core`, `jiff-static`, `jiff-tzdb` and
+  `jiff-tzdb-platform` (BurntSushi), `serde_ignored` 0.1.14 (dtolnay), and
+  `config` 0.15.25 (`rust-cli/config-rs`) as a new `atuin-common` feature;
+  `tonic` gains its `gzip` feature, and `rmp-serde` is a dev-dependency.
+  Removed: `chrono`, `chrono-humanize`, `eventsource-stream`, `eye_declare`,
+  `eye_declare_engine`, `tui-textarea-2` and `vte`. Every crate is a
+  crates.io entry with its checksum in `Cargo.lock`. `deny.toml` adds two
+  ignores with written reasons: RUSTSEC-2026-0543 (chrono unmaintained, kept
+  by `rmcp`) and RUSTSEC-2026-0542 (humantime unmaintained; `jiff`'s friendly
+  format would reject duration spellings that users' configs hold).
+- **Upstream code read:** I compared `v18.24.8...v18.25.0`, 41 commits and 438
+  files, reading the patches rather than the changelog. Most of it is the
+  removal of the built-in Atuin AI agent (`crates/atuin-ai`'s TUI, state
+  machine, permissions, skills and store, roughly 15,000 lines) and the new
+  interactive `atuin setup` (a plan, a form, a scrolling view, an encoding
+  module, agent screens and a users file), which is what writes the user's
+  `atuin.lua` and the agents' MCP and hook entries. The rest: date handling
+  moves to `jiff` with DST-aware time zones, the daemon's search index is
+  split into `index/core.rs` and `index/shared.rs` with the journal work that
+  goes with it, config warns about unknown keys, themes lose `max_depth` and
+  `debug`, and octavo gzips thread uploads, stores undo markers on the hub and
+  reads its rules from `atuin.lua`.
+- **Telemetry and network:** no new destination and no new client. The only
+  `http`/`https` literals the diff adds are test fixtures and the loopback
+  debug address. `UPLOADS_HISTORY` in `crates/atuin-octavo/src/lib.rs` is
+  `false`, so commands and their output go up for no config file; the code
+  that would send them stays behind it. A thread goes up only when the user's
+  own `atuin.lua` sets `upload.threads` (which `atuin setup --hub` writes) and
+  no `atuin.lua` at or above where it started says no; a project's file can
+  only keep a thread here. That replaces `[teams]` in `config.toml`, which is
+  now an unknown key that only warns, so an existing `teams.enabled = true`
+  stops uploading rather than starting anything. Octavo still opens without a
+  config file only when its queue file exists, which is the path that keeps
+  sending deletions.
+- **Install:** unchanged. `/usr/bin/atuin` plus the license and README, with no
+  scriptlets, units or links, which `check_package` enforces, and the `allow`
+  file still carries only `override debian`. No install path or `allow` entry
+  is needed. `test.sh` is unchanged: `atuin --version`, and `atuin init nu`
+  under `nu-check`. 18.25.0's `init nu` output adds helix modes behind a
+  nushell version check (`(version).minor >= 115`), which nushell 0.116.1,
+  the version depot ships, takes; the script is otherwise the same. CI's
+  install test runs `test.sh` on the built package.
+- **Upstream status:** active and not archived, same organization `atuinsh`,
+  same release workflow. 18.25.0 was published 2026-11-20.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-20.
+
 ## 18.24.8-1 (2026-11-13)
 
 - **Why depot ships it:** Fedora 44's atuin (rpm 18.12.1, from Fedora's
