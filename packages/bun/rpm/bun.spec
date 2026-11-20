@@ -4,7 +4,7 @@
 %global __os_install_post %{nil}
 
 Name:           bun
-Version:        1.4.4
+Version:        1.4.5
 Release:        1%{?dist}
 Summary:        JavaScript runtime, package manager and bundler
 License:        MIT
@@ -36,5 +36,8 @@ chmod 755 %{buildroot}%{_bindir}/bunx
 %{_bindir}/bunx
 
 %changelog
+* Fri Nov 20 2026 depot <noreply@github.com> - 1.4.5-1
+- Upstream release 1.4.5.
+
 * Fri Nov 06 2026 depot <noreply@github.com> - 1.4.4-1
 - Upstream release 1.4.4.

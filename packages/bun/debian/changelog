@@ -1,3 +1,9 @@
+bun (1.4.5-1) unstable; urgency=medium
+
+  * Upstream release 1.4.5.
+
+ -- depot <noreply@github.com>  Fri, 20 Nov 2026 08:26:03 +0000
+
 bun (1.4.4-1) unstable; urgency=medium
 
   * Upstream release 1.4.4.
