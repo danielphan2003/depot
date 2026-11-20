@@ -5,7 +5,7 @@
 %global __os_install_post %{nil}
 
 Name:           atuin
-Version:        18.24.8
+Version:        18.25.0
 Release:        1%{?dist}
 Summary:        Magical shell history
 License:        MIT
@@ -31,6 +31,9 @@ install -Dm755 atuin -t %{buildroot}%{_bindir}
 %{_bindir}/atuin
 
 %changelog
+* Fri Nov 20 2026 depot <noreply@github.com> - 18.25.0-1
+- Upstream release 18.25.0.
+
 * Fri Nov 13 2026 depot <noreply@github.com> - 18.24.8-1
 - Upstream release 18.24.8.
 
