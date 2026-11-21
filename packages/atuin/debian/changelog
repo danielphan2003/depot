@@ -1,3 +1,9 @@
+atuin (18.25.1-1) unstable; urgency=medium
+
+  * Upstream release 18.25.1.
+
+ -- depot <noreply@github.com>  Sat, 21 Nov 2026 08:13:08 +0000
+
 atuin (18.25.0-1) unstable; urgency=medium
 
   * Upstream release 18.25.0.
