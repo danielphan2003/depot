@@ -3,6 +3,66 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 18.25.1-1 (2026-11-21)
+
+- **Change:** upstream's 18.25.1, one release on from 18.25.0. The recipes
+  are unchanged apart from the version: `package.env`'s version and sha256,
+  the rpm spec's `Version` and changelog, and the deb changelog. `attest=`,
+  the shape of `source_url`, `allow` and `test.sh` stay as they were.
+- **Source:** the same musl release archive,
+  `https://github.com/atuinsh/atuin/releases/download/v18.25.1/atuin-x86_64-unknown-linux-musl.tar.gz`,
+  sha256 `f2bc97588d5aa91f49b992298544e13776df044cb4baf606875c7cc8444e9e00`.
+  The archive I downloaded has that hash, and it is the line the release's
+  `sha256.sum` and the asset's own `.sha256` file carry.
+- **Attestation:** SLSA build provenance (`https://slsa.dev/provenance/v1`)
+  from `atuinsh/atuin/.github/workflows/release.yml@refs/tags/v18.25.1`,
+  verified for the archive with `gh attestation verify` (exit 0). The workflow
+  file is unchanged in this diff. The tag is lightweight and its commit
+  `a4c2ee46` is unsigned; the attestation names that commit and workflow run
+  44818941145, on a self-hosted runner as the previous release's was.
+- **Binary:** static-pie (musl), x86-64, stripped, with no interpreter and no
+  `NEEDED` libraries, 60 MB. The archive holds `atuin`, `CHANGELOG.md`,
+  `LICENSE` and `README.md`, the same four entries as before.
+- **Build and dependencies:** none. The recipes unpack the archive and install
+  the binary, with no network access beyond the pinned download. Upstream's
+  build adds `terminal-colorsaurus` 1.0.3 (with `terminal-trx` 0.2.6 and
+  `xterm-color` 1.0.2, all published by tautropfli) for the setup screen's
+  background detection, `unicode-general-category` 1.1.0 (wezm) and
+  `unicode-normalization` 0.1.26 (Manishearth and others) through `rmcp`
+  3.9.0 to 3.11.0, `tonic` and `tonic-prost` 0.14.6 to 0.14.9, and
+  `rust-embed`'s `debug-embed` feature. Every crate is a crates.io entry with
+  its checksum in `Cargo.lock`.
+- **Upstream code read:** I compared `v18.25.0...v18.25.1`, 13 commits and 75
+  files, reading the patches rather than the changelog. Most of it is the new
+  Mistral Vibe harness: a reader for Vibe's private session store (its
+  generations, content-addressed chunks and hash-chained journal, replayed as
+  Vibe does), a writer of the Vibe 2 session folders Vibe imports on resume,
+  a session sync that only appends to a folder Vibe hasn't imported yet, MCP
+  installation through `vibe mcp add`, and the tool-name and path mapping the
+  continuation carries between agents. The rest: `threads.capture` renamed to
+  `threads.enabled`, with the old names still read as legacy keys, so an
+  existing config keeps working; the setup screen asking the terminal for its
+  background with `terminal-colorsaurus` before falling back to `COLORFGBG`;
+  the setup sign-in screen showing the code to match against the Hub; the
+  resume binding moved from ctrl-] to ctrl-t; line breaks kept in setup status
+  text; and CI's new `pty-report.sh` debug script.
+- **Telemetry and network:** no new destination and no new client. The only
+  `http`/`https` literals the diff adds are documentation links. Vibe's
+  sessions are read from local files under `$VIBE_HOME/logs/session` and never
+  uploaded by this code, and Vibe Code Web's server-side sessions are
+  explicitly not read. `atuin setup --only --mcp` runs `vibe mcp add` to
+  register the local MCP server, as it does for the other agents, and only
+  when asked. The setup screen's terminal query is written to the terminal and
+  read back from it, not to the network.
+- **Install:** unchanged. `/usr/bin/atuin` plus the license and README, with no
+  scriptlets, units or links, which `check_package` enforces, and the `allow`
+  file still carries only `override debian`. No install path or `allow` entry
+  is needed. `test.sh` is unchanged: `atuin --version`, and `atuin init nu`
+  under `nu-check`; CI's install test runs it on the built package.
+- **Upstream status:** active and not archived, same organization `atuinsh`,
+  same release workflow. 18.25.1 was published 2026-11-20.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-21.
+
 ## 18.25.0-1 (2026-11-20)
 
 - **Change:** upstream's 18.25.0, one release on from 18.24.8. The recipes
