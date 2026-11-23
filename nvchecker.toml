@@ -142,3 +142,10 @@ prefix = "v"
 source = "regex"
 url = "https://files.radicle.dev/releases/"
 regex = 'href="(\d+\.\d+\.\d+)/"'
+
+# The CI broker is developed on Radicle, which nvchecker cannot query, but
+# upstream publishes every release to crates.io (RELEASE.md), which is where
+# depot's source comes from too.
+[radicle-ci-broker]
+source = "cratesio"
+cratesio = "radicle-ci-broker"

@@ -50,6 +50,7 @@ breakage is caught.
 | [`nodejs-latest`](packages/nodejs-latest) | 26.13.0 | debian-trixie, fedora-44 | Node.js, newest stable release; upstream's binary |
 | [`nushell`](packages/nushell) | 0.116.1 | debian-trixie, fedora-44 | Daniel's shell; upstream's binary, Fedora's is too old |
 | [`radicle`](packages/radicle) | 1.10.3 | fedora-44 | Radicle, peer-to-peer code hosting on Git (`rad`, `radicle-node`, `git-remote-rad`); Arch ships it |
+| [`radicle-ci-broker`](packages/radicle-ci-broker) | 0.32.1 | fedora-44 | CI broker for repositories on a Radicle node (`cib`, `cibtool`) |
 | [`railway-cli`](packages/railway-cli) | 5.71.0 | arch, fedora-44 | Railway command-line client (`railway`); upstream's attested binary |
 | [`run0-sudo-shim`](packages/run0-sudo-shim) | 1.4.2 | arch | `/usr/bin/sudo` through run0 and polkit; `provides`/`conflicts` sudo (see its `allow`) |
 | [`starship`](packages/starship) | 1.27.0 | fedora-44 | shell prompt; Arch and Debian ship it |
