@@ -134,3 +134,11 @@ source = "github"
 github = "atuinsh/atuin"
 use_latest_release = true
 prefix = "v"
+
+# Radicle publishes releases on its own files server, not on GitHub. Each
+# stable release is a directory named x.y.z; release candidates (x.y.z-rc.N)
+# do not match.
+[radicle]
+source = "regex"
+url = "https://files.radicle.dev/releases/"
+regex = 'href="(\d+\.\d+\.\d+)/"'
