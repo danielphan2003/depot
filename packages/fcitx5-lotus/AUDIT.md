@@ -3,6 +3,72 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 7.0.0-1 (2026-11-23)
+
+- **Change:** upstream's 7.0.0, a major release, on the same recipe: upstream's
+  Arch release build, repackaged, nothing compiled here. The bump only moves
+  `package.env` and `arch/PKGBUILD` to the new tag and its sha256.
+- **Source:** upstream's Arch release build
+  `https://github.com/LotusInputMethod/fcitx5-lotus/releases/download/v7.0.0/fcitx5-lotus-v7.0.0-x86_64-archlinux.tar.zst`,
+  sha256 `2ba9a9a35dee1c19be8715f2e9f16c7056e9bb54e75877ea9e7d0f005d767fbf`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset, uploaded by `github-actions[bot]` with the
+  release on 2026-11-22. The project's own organization, not a fork or a
+  mirror.
+- **Attestation:** SLSA build provenance signed for
+  `LotusInputMethod/fcitx5-lotus/.github/workflows/build-and-release.yml` run
+  for `refs/tags/v7.0.0`; `gh attestation verify` with `--signer-workflow` and
+  `--source-ref` succeeded for the pinned file, and the bundle names commit
+  `29c5bb95413c2e899250ea16969197d3d270e0a2`. A file that is not an attested
+  asset answers 404, so the check is real. `lint.sh` repeats it on every run.
+- **Tag:** `v7.0.0` is lightweight, as `v6.1.1` was, and points at commit
+  `29c5bb95`, the merge of PR #712 from `dev`, authored by `nhktmdzhg` and
+  reported by GitHub as verified. The diff I read is exactly
+  `v6.1.1...v7.0.0`.
+- **Contents compared** (extracted, never run) with the 6.1.1 archive: the
+  same 186-entry file list, so no new install path appears. 47 files differ:
+  `liblotus.so` and `fcitx5-lotus-server` (rebuilt), `addon/lotus.conf`,
+  `version.py` and the metainfo XML (version strings only), the `vi` locale
+  catalogue, the 38 `.pyc` files of the settings GUI (bytecode for the two
+  changed sources below), and two Python sources, `mode_manager.py` and
+  `dynamic_settings.py`, which only drop the Select mode. Every icon,
+  dictionary, unit, sysusers, udev, modules-load and `usr/bin/fcitx5-lotus-settings`
+  wrapper file is byte-identical.
+- **Binary:** `liblotus.so` and `fcitx5-lotus-server` link exactly the same
+  libraries as in 6.1.1, so the runtime `depends` list is unchanged. The
+  binaries are upstream's Arch build, so a soname bump shows up in the canary,
+  as with 6.0.4-2.
+- **Allowed paths:** unchanged. Nothing new is installed outside the paths
+  Daniel approved on 2026-11-03, and no `allow` line was needed. `etc/runit`
+  and `etc/init.d` in the archive stay out of the package, as before, and
+  there is still no install script. The unit, udev rule, sysusers and
+  modules-load files are the same bytes as 6.1.1.
+- **Upstream code read:** I read the `v6.1.1...v7.0.0` diff, 118 files, 1684
+  insertions and 3129 deletions. It removes the Select mode end to end:
+  `KbOp::Select` leaves the server protocol, the uinput server no longer
+  presses Shift+Left, Delete or PAUSE for it, and the `pendingSelects`,
+  `shiftHeld` and physical-shift bookkeeping goes with it, along with
+  `lotus-physical-shift.{cpp,h}` and its tests. The Chromium/autofill
+  program-name detection is replaced by a Smooth-mode dot anchor, so the
+  engine no longer keeps a browser name list. The rest is text handling:
+  never commit a bare combining mark, count grapheme clusters in the
+  decomposed replacement path and back over all combining marks in the diff,
+  keep repeated `a`/`e` elongation after horn vowels, restore the
+  non-Vietnamese word before digits in macro mode, plus the settings GUI
+  tests. The only build change is `FindPthread` (a vendored CMake module,
+  deleted) replaced by CMake's built-in `Threads`. No new network access,
+  telemetry, credential handling, install rule, vendored binary or
+  build-script download; `misc/` and the release workflow are untouched.
+- **Removed feature:** the "Uinput (Select)" mode is gone. Daniel's machines
+  use "Uinput (Smooth)" (`DefaultIM=lotus`), so nothing in his setup refers
+  to it; a config that still named Select would fall back to a mode the
+  engine no longer offers.
+- **Upstream status:** active and not archived, same `LotusInputMethod`
+  organization, same release workflow. As noted for 6.1.0, the release build
+  is not reproducible and its assets stay mutable, so a re-run can break the
+  pin again; the canary and lint would catch it.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-23.
+
 ## 6.1.1-1 (2026-11-17)
 
 - **Change:** upstream's 6.1.1 release, on the same recipe: the Arch release
