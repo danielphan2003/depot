@@ -1,3 +1,9 @@
+carapace (1.8.4-1) unstable; urgency=medium
+
+  * Upstream release 1.8.4.
+
+ -- depot <noreply@github.com>  Mon, 23 Nov 2026 08:55:49 +0000
+
 carapace (1.8.2-1) unstable; urgency=medium
 
   * Upstream release 1.8.2.
