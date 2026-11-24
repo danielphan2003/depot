@@ -3,7 +3,7 @@
 %global debug_package %{nil}
 
 Name:           carapace
-Version:        1.8.4
+Version:        1.8.5
 Release:        1%{?dist}
 Summary:        Multi-shell multi-command argument completer
 License:        MIT
@@ -37,6 +37,9 @@ install -Dm755 carapace -t %{buildroot}%{_bindir}
 %{_bindir}/carapace
 
 %changelog
+* Tue Nov 24 2026 depot <noreply@github.com> - 1.8.5-1
+- Upstream release 1.8.5.
+
 * Mon Nov 23 2026 depot <noreply@github.com> - 1.8.4-1
 - Upstream release 1.8.4.
 
