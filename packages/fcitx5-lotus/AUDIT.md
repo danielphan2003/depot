@@ -3,6 +3,65 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 7.0.1-1 (2026-11-24)
+
+- **Change:** upstream's 7.0.1, one release on from 7.0.0, on the same
+  recipe: upstream's Arch release build, repackaged, nothing compiled here.
+  The bump only moves `package.env` and `arch/PKGBUILD` to the new tag and its
+  sha256.
+- **Source:** upstream's Arch release build
+  `https://github.com/LotusInputMethod/fcitx5-lotus/releases/download/v7.0.1/fcitx5-lotus-v7.0.1-x86_64-archlinux.tar.zst`,
+  sha256 `6e42cd0234353b60cc3b27a93296a8942be8e9076a8f595d02bded0adebc0836`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset, uploaded by `github-actions[bot]` with the
+  release on 2026-11-23. The project's own organization, not a fork or a
+  mirror.
+- **Attestation:** SLSA build provenance signed for
+  `LotusInputMethod/fcitx5-lotus/.github/workflows/build-and-release.yml` run
+  for `refs/tags/v7.0.1`; `gh attestation verify` with `--signer-workflow` and
+  `--source-ref` succeeded for the pinned file, and the bundle's certificate
+  names that workflow at that tag. `lint.sh` repeats the check on every run.
+- **Tag:** `v7.0.1` is lightweight, as `v7.0.0` was, and points at commit
+  `7ea2cf5850b9b4045a2469a06543eeca0f9dbdd4`, the merge of PR #718 from
+  `dev`, authored by `nhktmdzhg` and reported by GitHub as verified. The diff
+  I read is exactly `v7.0.0...v7.0.1`.
+- **Contents compared** (extracted, never run) with the 7.0.0 archive: the
+  same 186-entry file list, so no new install path appears, and the archive
+  still carries no links and no setuid files. 42 files differ:
+  `liblotus.so` (rebuilt), `addon/lotus.conf`, `version.py` and the metainfo
+  XML (version strings only), and the 38 `.pyc` files of the settings GUI,
+  recompiled from unchanged sources. `fcitx5-lotus-server`, the
+  `usr/bin/fcitx5-lotus-settings` wrapper, and every icon, dictionary, unit,
+  sysusers, udev and modules-load file are byte-identical.
+- **Binary:** `liblotus.so` links exactly the same libraries as in 7.0.0, is
+  the same stripped ELF shared object, and carries no RPATH or RUNPATH, so
+  the runtime `depends` list is unchanged. The binaries are upstream's Arch
+  build, so a soname bump shows up in the canary.
+- **Allowed paths:** unchanged. Nothing new is installed outside the paths
+  Daniel approved on 2026-11-03, and no `allow` line was needed. `etc/runit`
+  and `etc/init.d` in the archive stay out of the package, as before, and
+  there is still no install script.
+- **Upstream code read:** I read the `v7.0.0...v7.0.1` diff, 14 commits and 8
+  files: the version in `CMakeLists.txt`, the nix packaging, the Debian and
+  rpm changelogs, `src/lotus-wlr-virtual-keyboard.{cpp,h}` and
+  `test/mode-dot-anchor.cpp`. The change is confined to the Wayland
+  `zwp_virtual_keyboard_v1` path used on wlroots compositors. It now reads
+  the seat's real keymap through a second `wl_keyboard` and puts it back
+  after a text burst, instead of leaving the custom text keymap in place; a
+  keymap from another virtual keyboard (`wtype`, `ydotool`) or its own echo
+  is ignored. Shift is mirrored from the physical keyboard and re-applied
+  after each upload, a whole burst is batched and drained with one roundtrip,
+  and the keymap memfds are reused, capped at eight. The test is reworked
+  onto the shared engine fixture and asserts the same behaviour. There is no
+  new network access, telemetry, credential handling, vendored binary, new
+  dependency (the `common-fd-guard.h` RAII header it uses already existed at
+  7.0.0), or change to the release workflow.
+- **Upstream status:** active and not archived, same `LotusInputMethod`
+  organization, same release workflow. As noted for 6.1.0, the release build
+  is not reproducible and its assets stay mutable, so a re-run can break the
+  pin again; the canary and lint would catch it.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-24.
+
 ## 7.0.0-1 (2026-11-23)
 
 - **Change:** upstream's 7.0.0, a major release, on the same recipe: upstream's
