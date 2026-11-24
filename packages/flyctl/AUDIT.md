@@ -3,6 +3,52 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.5.16-1 (2026-11-24)
+
+- **Change:** upstream's 0.5.16, one release on from 0.5.15. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.16.tar.gz`,
+  sha256 `1f5d8494671832ef36c0ecb368a42873a11a6c24ff26a8ec1615ca54714d39e0`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.16_checksums.txt` lists the release binaries, not this tag
+  tarball, and the tag is lightweight (it points straight at commit
+  `fd050512152def8fc78ee1cc01ca9b0d374ee15e`, authored by Tom and reported by
+  GitHub as verified). So I checked the archive against the tag commit's tree
+  instead: all 1135 files it holds are byte-identical (same blob hash, no
+  extra or missing file, no symlinks) to that commit's tree, so the tarball is
+  exactly the tag's tree as GitHub generated it from `superfly/flyctl`.
+- **Build and dependencies:** unchanged. Go from source with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local`, `CGO_ENABLED=0` and upstream's
+  `production` tag and ldflags; makepkg supplies the distribution's flags.
+  `go generate ./...` runs genqlient against the bundled `gql/schema.graphql`
+  and mockgen, both pinned in `go.mod`. `go.mod` and `go.sum` bump one module,
+  `superfly/fly-go` 0.12.7 to 0.12.8, which is Fly's own module and was
+  already pinned: no module path is new, so no new dependency publisher. The
+  `Makefile`, `.goreleaser.yml`, `Dockerfile` and `.github/` are untouched.
+- **Upstream code read:** I compared `v0.5.15...v0.5.16`, 3 commits and 6
+  files, reading the patches rather than the changelog.
+  - `machine start` keeps waiting for a newly created Machine to finish
+    starting when another version replaces it. `WaitForStartOrStop` now, only
+    for the first start of a Machine that has a version and whose restart
+    policy is `no`, follows the original version after a 408
+    "deadline_exceeded: ... currently created", and returns the API's conflict
+    or not-found error once that version is gone. Every other failure keeps
+    the existing restart-policy error.
+  - `WaitForState` bounds each long-poll read with its own 70-second context,
+    so a stalled read is retried within the caller's original wait budget
+    instead of consuming it, and a short caller timeout is not extended.
+  - The `superfly/fly-go` bump carries the matching client change. New tests
+    cover both behaviours, including a real flaps client against an httptest
+    server. No new network access, telemetry, credential handling, vendored
+    binary or build-script change.
+- **Install:** unchanged. `/usr/bin/flyctl`, the two-line `/usr/bin/fly`
+  wrapper, its README and license, no install script, no units, nothing
+  else. `check_package` enforces this on the built package.
+- **Upstream status:** active, same owner (`superfly`), not archived; no
+  change to the release process.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-24.
+
 ## 0.5.15-1 (2026-11-23)
 
 - **Change:** upstream's 0.5.15, one release on from 0.5.14. The recipe is
