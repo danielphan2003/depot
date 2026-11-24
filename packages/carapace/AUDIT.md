@@ -3,6 +3,42 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 1.8.5-1 (2026-11-24)
+
+- **Change:** upstream's 1.8.5, one release on from 1.8.4. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/carapace-sh/carapace-bin/archive/refs/tags/v1.8.5.tar.gz`,
+  sha256 `e301baf4c1921d22da98e01813dadb7c1c6db435120c3e9db5b4e209e307d5dd`.
+  The archive I downloaded has that hash. Upstream's
+  `carapace-bin_1.8.5_checksums.txt` covers the release binaries, not this
+  tag tarball, and the tag is lightweight: it points at commit
+  `d99c1172ad2df3e7488bfa0e8f8d1499b1e663d1`, which GitHub reports as verified
+  and authored by Ralf Steube. I also compared the archive against that
+  commit's tree: all 23652 files are byte-identical (same blob hash, 6220
+  executables on both sides, none extra, none missing), so the tarball is the
+  tag's tree as GitHub generated it from `carapace-sh/carapace-bin`, not a
+  fork or a mirror.
+- **Build and dependencies:** unchanged, and no Go source changed at all, so
+  `go.mod` and `go.sum` are untouched and no dependency was added or moved.
+  `go generate ./cmd/...`, then a static `go build -tags release` with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local` and `CGO_ENABLED=0`; makepkg,
+  dh and rpm supply the distribution's flags. No new dependency publisher.
+- **Upstream code read:** I read `v1.8.4...v1.8.5`: two commits (one merge of
+  PR #3952) touching a single file, `.goreleaser.yml`, which comments out the
+  `carapace.db.gz` entries for the archives, the AUR package and the nfpm
+  packages and keeps the file in `release.extra_files` only. No Go code, no
+  build script that depot runs, and no new download, network endpoint,
+  telemetry, credential handling or vendored blob. depot builds with
+  `go build` directly and never ran goreleaser, so nothing depot builds or
+  installs changes.
+- **Install:** unchanged. `/usr/bin/carapace`, the README and the license, no
+  install script, no units, nothing else. `check_package` enforces this on
+  the built package.
+- **Upstream status:** active, same owner (rsteube / `carapace-sh`), not
+  archived; the release process is unchanged.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-24.
+
 ## 1.8.4-1 (2026-11-23)
 
 - **Change:** upstream's 1.8.4, two releases on from 1.8.2 (1.8.3 was tagged
