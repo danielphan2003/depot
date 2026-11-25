@@ -3,6 +3,61 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.4.6-1 (2026-11-25)
+
+- **Why depot ships it:** Ente's command-line client for exports and account
+  tools; Daniel uses Ente Photos. Arch does not package it.
+- **Why a binary:** the earlier source build linked system dbus, OpenSSL, and
+  SQLCipher. The upstream binary carries those libraries and has a GitHub
+  release attestation.
+- **Source:** upstream's Linux x86-64 release asset
+  `https://github.com/ente/ente/releases/download/ente-cli-v0.4.6/ente-cli-v0.4.6-linux-amd64.tar.gz`,
+  sha256 `90012341e7952076a344f96fd456ea92f5c1bb929d88aeb78e0a0c9d7725a444`.
+  The downloaded archive matches the recipe, the `SHA256SUMS` entry, and the
+  release asset's own digest, and it holds the `ente` binary alone. `gh
+  release verify-asset` verified GitHub's immutable release attestation for
+  this exact asset, and the release is marked immutable. `attest=release` is
+  unchanged. The attestation proves GitHub published these bytes with the
+  release, not that CI built them from the tag's source.
+- **Starting recipe:** the PR moves the version and sha256 from 0.4.5 to
+  0.4.6. `pkgrel` stays at 1, and it changes no install commands or paths.
+- **Build and dependencies:** depot repackages the binary and does not build
+  it. Upstream CI still runs `cargo build --locked --release -p ente-cli
+  --bin ente`, so Cargo uses the upstream lockfile and refuses lockfile
+  changes. The CLI's own manifest changes only its version. The lock file
+  gains `aes`, `aes-gcm`, `cbc`, `ctr`, `ghash`, `polyval`, `block-padding`,
+  `salsa20`, `scrypt`, `pbkdf2` and `constant_time_eq`, all from crates.io,
+  published by the RustCrypto maintainers (and the established
+  `constant_time_eq` author). They belong to the new `import` feature of
+  `ente-auth`, which only the mobile binding enables; the CLI does not turn
+  it on. No new git dependency and no new publisher enters the build. The
+  binary is still static-pie with no shared libraries.
+- **Upstream code read:** I compared the actual tags `ente-cli-v0.4.5` and
+  `ente-cli-v0.4.6` (the PR body link omits the `ente-cli-` prefix): 202
+  commits, 182 files under `rust/`. The CLI gains `account session list` and
+  `session revoke` (`/users/sessions`, `/users/session`), `account family`
+  view, create, invite, remove, storage limit and leave (`/family/*`),
+  `account email-mfa` (`/users/email-mfa`), `account change-email`
+  (`/users/change-email`) with a new `--purpose change` for `request-otp`,
+  and `account totp disable`. Destructive actions ask for confirmation and
+  accept `--yes` only for unattended runs. The `photos file list --near`
+  radius filter is fixed at high latitudes. `ente-photos` gains a people
+  store and an ML consent check that reads the account's own
+  `/remote-store/feature-flags`. Every new request goes to the account's
+  configured museum origin through the existing session; added lines contain
+  no new host, no telemetry, no process spawn, no downloaded code and no
+  vendored binary. The only new binary files in the whole diff are web and
+  mobile images, and the only `unsafe` is a variable name in an ensu test.
+  The iOS-only TLS change in `ente-core` does not affect this binary.
+- **Upstream status:** active and not archived, with owner `ente`, unchanged.
+  Release 0.4.6 was published on 2026-11-25. `ente-cli-release.yml` is
+  identical between the two tags, so the release process is the one Daniel
+  accepted for 0.4.5.
+- **Install:** no install script, units, or triggers. The recipe still
+  installs only `/usr/bin/ente`; no `allow` entry or new install path is
+  needed.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-25.
+
 ## 0.4.5-1 (2026-11-19)
 
 - **Why depot ships it:** Ente's command-line client for exports and account
