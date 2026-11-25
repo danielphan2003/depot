@@ -3,6 +3,57 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.5.17-1 (2026-11-25)
+
+- **Change:** upstream's 0.5.17, one release on from 0.5.16. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.17.tar.gz`,
+  sha256 `5db3f2dda79888e3771fdee52d6a01e5ee4f5e561765a7e1389af892723bd901`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.17_checksums.txt` lists the release binaries, not this tag
+  tarball, and the tag is lightweight (it points straight at commit
+  `b4665b36fa5e9772a59fe0bb2e9ec367a07c50eb`, authored by Alex Leventer and
+  reported by GitHub as verified). GitHub's attestation lookup for the
+  archive answers 404, as it did for earlier releases. So I checked the
+  archive against the tag commit's tree instead: all 1153 files it holds are
+  byte-identical (same blob hash, no extra or missing file) to that commit's
+  tree, so the tarball is exactly the tag's tree as GitHub generated it from
+  `superfly/flyctl`.
+- **Build and dependencies:** unchanged. Go from source with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local`, `CGO_ENABLED=0` and upstream's
+  `production` tag and ldflags; makepkg supplies the distribution's flags.
+  `go generate ./...` runs genqlient against the bundled `gql/schema.graphql`
+  and mockgen, both pinned in `go.mod`. `go.mod` and `go.sum` are untouched,
+  so this release adds and bumps no module: no new dependency publisher.
+  The `Makefile`, `.goreleaser.yml`, `Dockerfile` and `.github/` are
+  untouched.
+- **Upstream code read:** I compared `v0.5.16...v0.5.17`, 11 commits and 120
+  files, reading the patches rather than the changelog.
+  - A new `internal/requestauth` transport narrows the `Authorization`
+    macaroon bundle to the organization a command is acting on, and only
+    when every requested organization is present in the bundle; otherwise it
+    sends the credentials unchanged. It is wired into the flaps, uiex and
+    deploy paths. That reduces which credentials a request carries; it adds
+    no host and no credential store.
+  - `machine restart` names a 408 from flaps as an unconfirmed outcome
+    instead of "could not stop machine". The deploy plan keeps a
+    replacement Machine in its chosen lane when the API gives it a new ID,
+    and no longer reuses an outer attempt's lease for a different ID.
+  - The `mpg` and `extensions` commands are mostly a help-text rewrite;
+    `apps list`, the builder provisioner and `launch` scope their requests to
+    the organization they already look up. A missing token now suggests `fly
+    auth signup` and `FLY_API_TOKEN` for headless runs. The rest of the diff
+    is tests, including a local httptest server.
+    No new network access, telemetry, credential handling beyond that
+    scoping, vendored binary or build-script change.
+- **Install:** unchanged. `/usr/bin/flyctl`, the two-line `/usr/bin/fly`
+  wrapper, its README and license, no install script, no units, nothing
+  else. `check_package` enforces this on the built package.
+- **Upstream status:** active, same owner (`superfly`), not archived; no
+  change to the release process.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-25.
+
 ## 0.5.16-1 (2026-11-24)
 
 - **Change:** upstream's 0.5.16, one release on from 0.5.15. The recipe is
