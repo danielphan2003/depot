@@ -3,6 +3,62 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.5.18-1 (2026-11-26)
+
+- **Change:** upstream's 0.5.18, one release on from 0.5.17. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.18.tar.gz`,
+  sha256 `cdd7f6d6834c682ca531a2e53a74d07ad220bac5ae810797b21810e861cf33a5`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.18_checksums.txt` lists the release binaries, not this tag
+  tarball, and the tag is lightweight (it points straight at commit
+  `e9880262304cf639c1e9221017f4043da9635488`, authored by Tom and reported
+  by GitHub as verified). GitHub's attestation lookup for the archive
+  answers 404, as it did for earlier releases. So I checked the archive
+  against the tag commit's tree instead: all 1158 files it holds are
+  byte-identical (same blob hash, no extra or missing file) to that commit's
+  tree, so the tarball is exactly the tag's tree as GitHub generated it from
+  `superfly/flyctl`.
+- **Build and dependencies:** unchanged. Go from source with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local`, `CGO_ENABLED=0` and upstream's
+  `production` tag and ldflags; makepkg supplies the distribution's flags.
+  `go generate ./...` runs genqlient against the bundled `gql/schema.graphql`
+  and mockgen, both pinned in `go.mod`. This release bumps one module,
+  `github.com/superfly/fly-go` 0.12.8 to 0.12.9, which superfly publishes
+  itself under the same path and org as before; nothing else in `go.mod` or
+  `go.sum` moves, so there is no new dependency publisher. The `Makefile`,
+  `.goreleaser.yml`, `Dockerfile` and `.github/` are untouched.
+- **Upstream code read:** I compared `v0.5.17...v0.5.18`, 9 commits and 29
+  files, reading the patches rather than the changelog.
+  - The WireGuard agent only uses token mode when the session carries
+    macaroons; a legacy `fo1_` token falls back to ordinary peers, which
+    fixes `fly ssh`, proxy and dig for those sessions. It also treats a
+    missing `~/.fly/config.yml` as unchanged rather than exiting, so a fresh
+    token-only machine can start an agent. Both are local config reads; no
+    new host, credential store or telemetry.
+  - `machine start` retries a start that flaps refused with 412 "machine
+    getting replaced" by polling for the successor Machine's version, under
+    a one-minute deadline; `machine run` and `machine wait` follow the
+    launch event ID and report an auto-destroyed Machine as destroyed rather
+    than an error. The polling goes to the same flaps client already in
+    context.
+  - Deploy restarts reuse each Machine's deployed files instead of merging
+    the `--file` flags, and the builder reuses the Depot worker hostname it
+    read while connecting instead of calling `ListWorkers` after the build.
+  - The pending-login file is now read under a shared lock, with a Windows
+    `CreateFile` that allows deletion; the Unix path is plain `os.Open`.
+    That is credential-file handling made safer, not wider.
+  - The rest is tests, including a local httptest server.
+    No new network access, telemetry, credential handling beyond that
+    scoping, vendored binary or build-script change.
+- **Install:** unchanged. `/usr/bin/flyctl`, the two-line `/usr/bin/fly`
+  wrapper, its README and license, no install script, no units, nothing
+  else. `check_package` enforces this on the built package.
+- **Upstream status:** active, same owner (`superfly`), not archived; no
+  change to the release process.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-26.
+
 ## 0.5.17-1 (2026-11-25)
 
 - **Change:** upstream's 0.5.17, one release on from 0.5.16. The recipe is
