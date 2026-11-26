@@ -5,7 +5,7 @@
 %global __os_install_post %{nil}
 
 Name:           afsr
-Version:        2.1.1
+Version:        2.2.0
 Release:        1%{?dist}
 Summary:        Unpack, modify and repack Android ext4 and erofs filesystem images reproducibly
 License:        GPL-2.0-or-later
@@ -30,5 +30,8 @@ install -Dm755 afsr -t %{buildroot}%{_bindir}
 %{_bindir}/afsr
 
 %changelog
+* Thu Nov 26 2026 depot <noreply@github.com> - 2.2.0-1
+- Upstream release 2.2.0.
+
 * Sat Nov 14 2026 depot <noreply@github.com> - 2.1.1-1
 - Upstream release 2.1.1: the attested static release binary.
