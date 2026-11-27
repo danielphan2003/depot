@@ -3,6 +3,58 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 5.76.0-1 (2026-11-27)
+
+- **Change:** upstream's 5.76.0, one release on from 5.75.0. The bump moves
+  `package.env`, `arch/PKGBUILD` and `rpm/railway-cli.spec` to the new tag,
+  its sha256 and a spec changelog line; nothing else changes.
+- **Source:** upstream's static release binary:
+  `https://github.com/railwayapp/cli/releases/download/v5.76.0/railway-v5.76.0-x86_64-unknown-linux-musl.tar.gz`,
+  sha256 `c5877d3b56c4f941b075ff5167db1b4f19219247a179fed338fc7b2bdbf54d29`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset, which `github-actions[bot]` uploaded with the
+  release on 2026-11-26. The project's own organization, `railwayapp`.
+- **Attestation:** `attest=release`; `gh release verify-asset v5.76.0` for the
+  pinned file succeeded ("present in release v5.76.0"), resolving the tag to
+  `cfece096`. I checked what else the digest carries: GitHub holds one
+  attestation for it, of type `https://in-toto.io/attestation/release/v0.2`
+  (the immutable-release statement naming every asset), and no SLSA build
+  provenance, so `release` is the strongest attestation upstream offers here.
+  `lint.sh` repeats the check. `v5.76.0` is an annotated tag object created by
+  `github-actions[bot]` on 2026-11-26; the release attestation, not the tag,
+  is what the recipe pins.
+- **Binary:** static-pie (musl), x86-64, stripped by upstream, no shared
+  libraries, and still one file in the archive (`railway`, mode 0755, no
+  README or license). 21673400 bytes against 21661112 for 5.75.0.
+- **Build and dependencies:** none in depot. `Cargo.lock` changes only the
+  `railwayapp` package version; no crate was added, removed or bumped, so no
+  new dependency publisher. `Cargo.toml` and `package.json` change the version
+  string only. No `.github`, `Makefile` or build-script file appears in the
+  diff.
+- **Upstream code read:** I read the whole `v5.75.0...v5.76.0` diff, 2 commits
+  and 7 files, plus the one-line `src/gql/schema.json` change, which I compared
+  type by type: it adds `dashboardHandoff` to `CloudAgentTaskDispatchInput`
+  and `dashboardRunUrl` to `CloudAgentTaskHandle`, and nothing else.
+  - `railway agent` now hands code requests to the agent dashboard. A new
+    thread (`--thread-id` unset) sends `dashboardHandoff: true` with the same
+    `CloudAgentTaskDispatch` mutation it already called; when the API answers
+    with a `dashboardRunUrl`, the CLI prints that link and returns a
+    `HANDED_OFF` status instead of waiting here, and `--json` carries the link
+    in `dashboardRunUrl` with no thread id. The URL is printed, never fetched
+    or opened, and the only network call is the dispatch to the same backboard
+    host as before.
+  - The rest is the help text for that path and a unit test for the JSON
+    shape. No new telemetry, credential handling, vendored blob, `curl | sh`
+    or change to the Makefile, the release workflow or CI. I compared the URL
+    and host strings of the 5.75.0 and 5.76.0 binaries: the same 14 hosts in
+    both.
+- **Install:** `/usr/bin/railway` only. No scriptlets, units, links or
+  additional paths, so no `allow` entry is needed and none changed.
+- **Upstream status:** active and not archived, same owner `railwayapp`, same
+  release workflow (releases published by `github-actions[bot]`); 5.76.0 was
+  published on 2026-11-26.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-27.
+
 ## 5.75.0-1 (2026-11-18)
 
 - **Change:** upstream's 5.75.0, one release on from 5.74.1. The bump moves
