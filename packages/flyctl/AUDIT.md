@@ -3,6 +3,70 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 0.5.19-1 (2026-11-27)
+
+- **Change:** upstream's 0.5.19, one release on from 0.5.18. The recipe is
+  unchanged apart from the version and the source hash.
+- **Source:** upstream tag tarball
+  `https://github.com/superfly/flyctl/archive/refs/tags/v0.5.19.tar.gz`,
+  sha256 `b276b75d5d6218702836ee1e3b3c4d614c82d8c7f6254699a91dc61d88ebe619`.
+  The archive I downloaded has that hash. Upstream's
+  `flyctl_0.5.19_checksums.txt` lists the release binaries, not this tag
+  tarball, and the tag is lightweight (it points straight at commit
+  `4a98c6abedda3906ae7c6c772e581a787028d260`, authored by Tom and reported
+  by GitHub as verified). GitHub's attestation lookup for the archive
+  answers 404, as it did for earlier releases. So I checked the archive
+  against the tag commit's tree instead: all 1165 files it holds are
+  byte-identical (same blob hash, no extra or missing file) to that commit's
+  tree, so the tarball is exactly the tag's tree as GitHub generated it from
+  `superfly/flyctl`.
+- **Build and dependencies:** unchanged. Go from source with
+  `GOFLAGS=-mod=readonly`, `GOTOOLCHAIN=local`, `CGO_ENABLED=0` and upstream's
+  `production` tag and ldflags; makepkg supplies the distribution's flags.
+  `go generate ./...` runs genqlient against the bundled `gql/schema.graphql`
+  and mockgen, both pinned in `go.mod`. `go.mod` and `go.sum` do not change in
+  this release: the one new import, `github.com/google/shlex`, was already a
+  direct module there (`v0.0.0-20191202100458-e7afc7fbc510`), published by
+  Google under its own path, so there is no new dependency publisher. The
+  `Makefile`, `.goreleaser.yml`, `Dockerfile` and the release workflows are
+  untouched; the only CI change is dependabot moving `j178/prek-action` from
+  3.1.0 to 3.1.1 in `checks.yml`, which depot's build never runs.
+- **Upstream code read:** I compared `v0.5.18...v0.5.19`, 8 commits and 25
+  files, reading the patches rather than the changelog.
+  - Machine updates are now verified by version. A new
+    `machine.VerifyUpdateApplied` reads the Machine back and compares its
+    version with the accepted update's, retries when it is still on the
+    previous version (flyd promotes a candidate after it stops), reports a
+    revert, a `failed` state or a superseded version as an error, and polls
+    under the caller's deadline. Deploy, `machine update` and the preserved
+    stopped-update path all route through it, and the state wait gains
+    `WithVersion` so a stale lifecycle event cannot be mistaken for the
+    update. The polling is against the same flaps client already in context.
+  - `fly scale count` now resolves the app config after it knows the requested
+    groups: `FromRemoteAppForGroups` falls back to a release lookup when the
+    config rebuilt from Machines omits a named group, retrying once on
+    transient HTTP and timeout errors only (408, 429, 5xx, `net.Error`
+    timeouts). A permission error, a malformed stored config or an unknown
+    group still fails. No new host.
+  - Service validation only warns about a `[[services]]` block without
+    `processes` when the app defines more than one process group, so the
+    single-group case is accepted and its services attach to that group.
+  - The MCP `fly-machine-update` tool now builds `machine update` instead of
+    `machine create`, drops the create-only defaults and `use-zstd`/`rm`
+    flags, passes `--autostart`/`--autostop` explicitly and appends `--yes`;
+    `env` and `metadata` are typed as hashes and split with `shlex` into one
+    flag per entry. `fly volumes extend` selects the volume before resolving a
+    relative `+N` size.
+  - The rest is tests, including local `httptest` servers and `synctest`.
+    No new network access, telemetry, credential handling, vendored binary or
+    build-script change.
+- **Install:** unchanged. `/usr/bin/flyctl`, the two-line `/usr/bin/fly`
+  wrapper, its README and license, no install script, no units, nothing
+  else. `check_package` enforces this on the built package.
+- **Upstream status:** active, same owner (`superfly`), not archived; no
+  change to the release process.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-27.
+
 ## 0.5.18-1 (2026-11-26)
 
 - **Change:** upstream's 0.5.18, one release on from 0.5.17. The recipe is
