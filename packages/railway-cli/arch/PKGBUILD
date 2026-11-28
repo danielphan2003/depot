@@ -4,7 +4,7 @@
 # ../AUDIT.md. Named railway-cli because Arch's extra repository already has
 # an unrelated `railway` (a GNOME train-journey app).
 pkgname=railway-cli
-pkgver=5.76.0
+pkgver=5.77.0
 pkgrel=1
 pkgdesc='Railway command-line client'
 arch=('x86_64')
@@ -12,7 +12,7 @@ url='https://github.com/railwayapp/cli'
 license=('MIT')
 options=('!strip' '!debug')
 source=("$url/releases/download/v$pkgver/railway-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
-sha256sums=('c5877d3b56c4f941b075ff5167db1b4f19219247a179fed338fc7b2bdbf54d29')
+sha256sums=('65d52da2650171a3bf0c752e3eb6f533a948b0aaf7475f48f1cb26c8c6c5fed9')
 
 package() {
   install -Dm755 railway -t "$pkgdir/usr/bin"
