@@ -3,6 +3,86 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 7.0.2-1 (2026-11-28)
+
+- **Change:** upstream's 7.0.2, one release on from 7.0.1, and **not** a
+  pure version bump: it replaces the Python/PyQt6 settings GUI with a
+  compiled C++/Qt Quick one, so the package needs recipe, `test.sh` and
+  `allow` changes that this bump does not make. The bump itself only moves
+  `package.env` and `arch/PKGBUILD` to the new tag and its sha256. Held for
+  Daniel (see the last item).
+- **Source:** upstream's Arch release build
+  `https://github.com/LotusInputMethod/fcitx5-lotus/releases/download/v7.0.2/fcitx5-lotus-v7.0.2-x86_64-archlinux.tar.zst`,
+  sha256 `713e85484589e2d56436ea38c70db725c8be77f4c17c104fe2154bbe438c023a`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset, uploaded by `github-actions[bot]` with the
+  release on 2026-11-27. The project's own organization, not a fork or a
+  mirror.
+- **Attestation:** SLSA build provenance signed for
+  `LotusInputMethod/fcitx5-lotus/.github/workflows/build-and-release.yml` run
+  for `refs/tags/v7.0.2`; `gh attestation verify` with `--signer-workflow` and
+  `--source-ref` succeeded for the pinned file. That workflow still has the
+  same path, so `attest=` is unchanged and correct. `lint.sh` repeats the
+  check on every run.
+- **Tag:** `v7.0.2` is lightweight, as `v7.0.1` was, and points at commit
+  `777b8477f82cecaca0d65db19763f27c50c70e2b`, the merge of PR #738 from
+  `dev`, authored by `nhktmdzhg` and reported by GitHub as verified. The diff
+  I read is exactly `v7.0.1...v7.0.2`, 32 commits.
+- **Contents compared** (extracted, never run) with the 7.0.1 archive: 186
+  entries became 120. Every removed entry is under
+  `usr/share/fcitx5-lotus/settings-gui/` (the Python sources, their
+  `__pycache__` bytecode, and `main.py`), and `usr/bin/fcitx5-lotus-settings`
+  is now a compiled ELF instead of the two-line `exec .../main.py` wrapper,
+  with the QML embedded from `settings-gui/lotus_settings.qrc`. Of the 79
+  files both archives carry, 6 differ: the settings binary, `liblotus.so`,
+  `addon/lotus.conf` and the metainfo XML (version strings only), the
+  dictionary (two entries dropped, `chấ` and `đẵ`), and the `vi` catalogue.
+  The server binary, every icon, the unit, `sysusers.d`, `udev`, and
+  `modules-load.d` files are byte-identical. `etc/runit` and `etc/init.d`
+  are still in the archive and still stay out of the package.
+- **Binary:** `liblotus.so` links exactly the libraries it did in 7.0.1, so
+  the addon's runtime needs are unchanged. The new
+  `/usr/bin/fcitx5-lotus-settings` links `libQt6QuickControls2`, `libQt6Quick`,
+  `libQt6Qml`, `libQt6Widgets`, `libQt6Gui`, `libQt6DBus` and `libQt6Core`,
+  none of which the package declares.
+- **Install:** no install script, no setuid files, no file capabilities, and
+  no new install path: the package installs less than before. But `depends`
+  still lists `python`, `python-dbus`, `python-pyqt6` and `python-qtpy`,
+  which the package no longer uses, and names no Qt6 package. CI's install
+  test fails on exactly that: `/usr/bin/fcitx5-lotus-settings has missing
+  libraries: libQt6QuickControls2.so.6, libQt6Quick.so.6, libQt6Qml.so.6`.
+  `test.sh` also greps
+  `/usr/share/fcitx5-lotus/settings-gui/version.py` for the version, and that
+  file no longer exists (`grep: No such file or directory`). `allow` still
+  grants the Python GUI's paths, which now match nothing.
+- **Upstream code read:** the whole `v7.0.1...v7.0.2` diff. The settings GUI
+  is rewritten as a Qt Quick app (about 2500 lines in
+  `settings-gui/cpp/settings_backend.cpp`, plus `dbus_client.cpp`, the theme
+  and i18n bridges, the QML pages, a vendored `DCommon`/`Quickshell` QML
+  component library under its own MIT license, and an `fzf.js` port). It
+  writes the user's configuration and custom dictionary atomically under the
+  user's own config directory, talks to `org.fcitx.Fcitx5` /
+  `org.fcitx.Fcitx.Controller1` on the session bus, and its diagnostics page
+  runs only `journalctl -xeu fcitx5-lotus-server@<user>.service` and
+  `fcitx5-diagnose`. No network code, no telemetry, no credential handling,
+  no `curl | sh`, no vendored binary blob. The rest: the Smooth-mode dot
+  anchor uses U+200B instead of U+00B7, CapsLock and Shift are preserved
+  across the D-Bus and Wayland paths, a new XTEST path, the dictionary
+  cleanup above, test refactors, dependabot action bumps, new
+  `BUILD_UINPUT`/`BUILD_QML_SETTING` CMake options, and a release workflow
+  that now installs `qt6-base`, `qt6-declarative` and `qt6-svg` and copies
+  the Fedora `.repo` file from `packaging/` instead of generating it.
+- **Upstream status:** active and not archived, same `LotusInputMethod`
+  organization, same release workflow. The GUI rewrite came in from an
+  outside contributor (PR #720), which is why the release is more than a
+  version string.
+- **Held:** the update needs `depends` (drop `python*`, add `qt6-base` and
+  `qt6-declarative`, and check whether the icon theme needs `qt6-svg`),
+  `test.sh` (the `version.py` check) and `allow` (drop the dead Python GUI
+  paths) changes. Those are recipe changes outside an audit, so this entry
+  records the findings and the pull request stays open for Daniel.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-28.
+
 ## 7.0.1-1 (2026-11-24)
 
 - **Change:** upstream's 7.0.1, one release on from 7.0.0, on the same
