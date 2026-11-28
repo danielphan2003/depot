@@ -3,6 +3,78 @@
 Newest first. Each entry records what was read, what was found, and who
 read it. A version bump without an entry here does not get merged.
 
+## 5.77.0-1 (2026-11-28)
+
+- **Change:** upstream's 5.77.0, three releases on from 5.76.0 (5.76.1 and
+  5.76.2 were cut in between and nvchecker proposed the newest). The bump
+  moves `package.env`, `arch/PKGBUILD` and `rpm/railway-cli.spec` to the new
+  tag, its sha256 and a spec changelog line; nothing else changes.
+- **Source:** upstream's static release binary:
+  `https://github.com/railwayapp/cli/releases/download/v5.77.0/railway-v5.77.0-x86_64-unknown-linux-musl.tar.gz`,
+  sha256 `65d52da2650171a3bf0c752e3eb6f533a948b0aaf7475f48f1cb26c8c6c5fed9`.
+  The archive I downloaded has that hash, and it matches the `digest` GitHub
+  reports for the release asset, which `github-actions[bot]` uploaded with the
+  release on 2026-11-28. The project's own organization, `railwayapp`.
+- **Attestation:** `attest=release`; `gh release verify-asset v5.77.0` for the
+  pinned file succeeded ("present in release v5.77.0"), resolving the tag to
+  `363de32c`. I checked what else the digest carries: GitHub holds one
+  attestation for it, of type `https://in-toto.io/attestation/release/v0.2`
+  (the immutable-release statement naming every asset), and no SLSA build
+  provenance, so `release` is the strongest attestation upstream offers here.
+  `lint.sh` repeats the check. `v5.77.0` is an annotated tag object created by
+  `github-actions[bot]` on 2026-11-28; the release attestation, not the tag,
+  is what the recipe pins.
+- **Binary:** static-pie (musl), x86-64, stripped by upstream, no shared
+  libraries, and still one file in the archive (`railway`, mode 0755, no
+  README or license). 21685688 bytes against 21673400 for 5.76.0, and the
+  `.tar.gz` is 9460891 bytes against 9460217, so the archive grew only with
+  the binary.
+- **Build and dependencies:** none in depot. `Cargo.lock` changes only the
+  `railwayapp` package version; no crate was added, removed or bumped, so no
+  new dependency publisher. `Cargo.toml` and `package.json` change the version
+  string only. No `.github`, `Makefile` or build-script file appears in the
+  diff.
+- **Upstream code read:** I read the whole `v5.76.0...v5.77.0` diff, 7 commits
+  and 17 files, two of them release commits.
+  - `railway agent` no longer prints the billing notice or waits five seconds
+    before it first creates the environment's cloud agent: the notice, the
+    wait and its key handling are deleted, `--accept` is kept but hidden and
+    ignored, and the agent starts at once. This is upstream's product
+    decision, and it changes nothing depot installs: the package is the CLI as
+    upstream builds it, and nothing runs it here.
+  - A code request that `railway agent` hands to the agent dashboard is now
+    followed in the terminal (`src/commands/agent/follow.rs`, new, 431 lines).
+    When stdin, stdout and stderr are terminals and `--json` is not set, it
+    polls the run on the same backboard host through the existing
+    `task::fetch`, prints the tools the run uses, answers approvals
+    (allow/deny) and the agent's own `requester` questions inline, and leaves
+    forms from other servers to the dashboard so nothing secret is typed into
+    a terminal. Ctrl-C detaches and the run keeps going. At the end it prints
+    the run's summary and the machine's preview domain, which comes from a new
+    `CloudAgentPreview` GraphQL query (`cloudAgent.domain`) against the same
+    backboard. `--json` now carries `cloudAgentId` and `sessionId` in the
+    handoff. No new host: I compared the URL prefixes in the 5.76.0 and 5.77.0
+    binaries and they are the same hosts.
+  - IaC: `buildCommand: null` or `""` now clears the live build command while
+    an omitted key keeps it, normalized so a landed clear is not planned
+    again; a database created with a pinned image re-asserts its `source` in
+    the same change set instead of drifting on the next plan; a project
+    definition may carry `id`, and plan and apply now refuse a file pinned to
+    a different project than the directory is linked to (`project("name")` is
+    only a label); and `railway config migrate` cutover now clears the stored
+    Config File path without starting a deployment, as its text says, and no
+    longer skips paths that are not Config-as-Code files, so any stored path is
+    cut over.
+  - No new telemetry, credential handling, vendored blob, `curl | sh` or
+    change to the Makefile, the release workflow or CI. The added tests are
+    unit tests.
+- **Install:** `/usr/bin/railway` only. No scriptlets, units, links or
+  additional paths, so no `allow` entry is needed and none changed.
+- **Upstream status:** active and not archived, same owner `railwayapp`, same
+  release workflow (releases published by `github-actions[bot]`); 5.77.0 was
+  published on 2026-11-28.
+- **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-28.
+
 ## 5.76.0-1 (2026-11-27)
 
 - **Change:** upstream's 5.76.0, one release on from 5.75.0. The bump moves
