@@ -8,7 +8,7 @@
 # The package installs root-level integration that depot normally refuses;
 # ../allow lists each path (Daniel approved, 2026-11-03).
 pkgname=fcitx5-lotus
-pkgver=7.0.1
+pkgver=7.0.2
 pkgrel=1
 pkgdesc='Vietnamese input method for fcitx5'
 arch=('x86_64')
@@ -16,10 +16,10 @@ url='https://github.com/LotusInputMethod/fcitx5-lotus'
 license=('GPL-3.0-or-later')
 depends=('acl' 'dbus' 'fcitx5' 'fcitx5-configtool' 'fcitx5-gtk' 'fcitx5-qt'
   'gcc-libs' 'glibc' 'hicolor-icon-theme' 'libevdev' 'libinput' 'libnotify'
-  'libudev.so' 'python' 'python-dbus' 'python-pyqt6' 'python-qtpy')
+  'libudev.so' 'qt6-base' 'qt6-declarative' 'qt6-svg')
 options=('!strip' '!debug')
 source=("$url/releases/download/v$pkgver/fcitx5-lotus-v$pkgver-x86_64-archlinux.tar.zst")
-sha256sums=('6e42cd0234353b60cc3b27a93296a8942be8e9076a8f595d02bded0adebc0836')
+sha256sums=('713e85484589e2d56436ea38c70db725c8be77f4c17c104fe2154bbe438c023a')
 
 package() {
   # The modes come from upstream; the owner is root's, whoever extracted it.

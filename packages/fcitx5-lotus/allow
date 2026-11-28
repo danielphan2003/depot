@@ -7,8 +7,9 @@ path usr/lib/fcitx5/liblotus\.so
 path usr/share/fcitx5/(addon|inputmethod)/lotus\.conf
 path usr/share/fcitx5/lotus/vietnamese\.cm\.dict
 
-# The settings GUI (Python) and its menu entry.
-path usr/share/fcitx5-lotus/settings-gui(/[A-Za-z0-9_./-]+)?
+# The settings GUI's menu entry, metadata and icons. The GUI itself is
+# /usr/bin/fcitx5-lotus-settings, which the default set already allows; the
+# Python tree under usr/share/fcitx5-lotus went away with 7.0.2 (AUDIT.md).
 path usr/share/applications/org\.fcitx\.Fcitx5\.Addon\.Lotus\.Settings\.desktop
 path usr/share/metainfo/org\.fcitx\.Fcitx5\.Addon\.Lotus\.metainfo\.xml
 path usr/share/icons/(hicolor/scalable/(apps|status)|breeze(-dark)?/status/(22|24))/(org\.fcitx\.Fcitx5\.)?fcitx-lotus[a-z-]*\.svg
