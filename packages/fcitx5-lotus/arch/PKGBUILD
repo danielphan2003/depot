@@ -16,7 +16,7 @@ url='https://github.com/LotusInputMethod/fcitx5-lotus'
 license=('GPL-3.0-or-later')
 depends=('acl' 'dbus' 'fcitx5' 'fcitx5-configtool' 'fcitx5-gtk' 'fcitx5-qt'
   'gcc-libs' 'glibc' 'hicolor-icon-theme' 'libevdev' 'libinput' 'libnotify'
-  'libudev.so' 'python' 'python-dbus' 'python-pyqt6' 'python-qtpy')
+  'libudev.so' 'qt6-base' 'qt6-declarative' 'qt6-svg')
 options=('!strip' '!debug')
 source=("$url/releases/download/v$pkgver/fcitx5-lotus-v$pkgver-x86_64-archlinux.tar.zst")
 sha256sums=('713e85484589e2d56436ea38c70db725c8be77f4c17c104fe2154bbe438c023a')

@@ -7,5 +7,6 @@ set -eu
 grep -q '^Library=liblotus' /usr/share/fcitx5/addon/lotus.conf
 grep -q 'User=uinput_proxy' /usr/lib/systemd/system/fcitx5-lotus-server@.service
 grep -q 'setfacl -m u:uinput_proxy:rw /dev/uinput' /usr/lib/udev/rules.d/99-lotus.rules
-grep -rq "$DEPOT_VERSION" /usr/share/fcitx5-lotus/settings-gui/version.py
+grep -q "^Version=$DEPOT_VERSION" /usr/share/fcitx5/addon/lotus.conf
+[ -x /usr/bin/fcitx5-lotus-settings ]
 echo "fcitx5-lotus $DEPOT_VERSION: addon, server unit, udev rule and settings GUI installed"

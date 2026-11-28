@@ -7,10 +7,11 @@ read it. A version bump without an entry here does not get merged.
 
 - **Change:** upstream's 7.0.2, one release on from 7.0.1, and **not** a
   pure version bump: it replaces the Python/PyQt6 settings GUI with a
-  compiled C++/Qt Quick one, so the package needs recipe, `test.sh` and
-  `allow` changes that this bump does not make. The bump itself only moves
-  `package.env` and `arch/PKGBUILD` to the new tag and its sha256. Held for
-  Daniel (see the last item).
+  compiled C++/Qt Quick one. The bump moves `package.env` and
+  `arch/PKGBUILD` to the new tag and its sha256, and this entry's own commit
+  carries the recipe changes that new GUI needs (`depends`, `test.sh`,
+  `allow`), which Daniel approved on 2026-11-28 after the audit reported
+  them.
 - **Source:** upstream's Arch release build
   `https://github.com/LotusInputMethod/fcitx5-lotus/releases/download/v7.0.2/fcitx5-lotus-v7.0.2-x86_64-archlinux.tar.zst`,
   sha256 `713e85484589e2d56436ea38c70db725c8be77f4c17c104fe2154bbe438c023a`.
@@ -44,17 +45,35 @@ read it. A version bump without an entry here does not get merged.
   the addon's runtime needs are unchanged. The new
   `/usr/bin/fcitx5-lotus-settings` links `libQt6QuickControls2`, `libQt6Quick`,
   `libQt6Qml`, `libQt6Widgets`, `libQt6Gui`, `libQt6DBus` and `libQt6Core`,
-  none of which the package declares.
+  which is what the recipe now declares as `qt6-base` (Core, Gui, Widgets,
+  DBus) and `qt6-declarative` (Qml, Quick, Quick Controls 2).
+- **Dependencies:** the recipe drops `python`, `python-dbus`, `python-pyqt6`
+  and `python-qtpy`, which the package no longer contains or runs, and adds
+  `qt6-base`, `qt6-declarative` and `qt6-svg`. All three are Arch packages of
+  Qt 6 (published by the Qt Project at qt.io, packaged by Arch), and they are
+  exactly the Qt modules upstream's own release workflow installs for this
+  build. `qt6-svg` is there for the image format plugin: the GUI draws its
+  window icon and the icons it lists through `QIcon::fromTheme`, and every
+  icon in the package is an SVG. The rest of `depends` is unchanged: the
+  addon's libraries, `acl` for the udev rule's `setfacl`, and the fcitx5
+  pieces. No new dependency comes from a new publisher.
 - **Install:** no install script, no setuid files, no file capabilities, and
-  no new install path: the package installs less than before. But `depends`
-  still lists `python`, `python-dbus`, `python-pyqt6` and `python-qtpy`,
-  which the package no longer uses, and names no Qt6 package. CI's install
-  test fails on exactly that: `/usr/bin/fcitx5-lotus-settings has missing
-  libraries: libQt6QuickControls2.so.6, libQt6Quick.so.6, libQt6Qml.so.6`.
-  `test.sh` also greps
-  `/usr/share/fcitx5-lotus/settings-gui/version.py` for the version, and that
-  file no longer exists (`grep: No such file or directory`). `allow` still
-  grants the Python GUI's paths, which now match nothing.
+  no new install path: the package installs less than before, since the
+  Python tree under `usr/share/fcitx5-lotus/settings-gui/` is gone and the
+  GUI is one binary in `usr/bin`. `test.sh` now checks
+  `Version=$DEPOT_VERSION` in `usr/share/fcitx5/addon/lotus.conf` and that
+  `/usr/bin/fcitx5-lotus-settings` is installed and executable, instead of
+  grepping the removed `version.py`. The install test is what proves no
+  library is missing: on the old `depends` it failed with
+  `libQt6QuickControls2.so.6`, `libQt6Quick.so.6` and `libQt6Qml.so.6` not
+  found.
+- **Allowed paths:** one line fewer. `allow` no longer grants
+  `usr/share/fcitx5-lotus/settings-gui/...`, because nothing is installed
+  there any more; the GUI's menu entry, metainfo, icons and the `vi`
+  catalogue stay listed, and `/usr/bin/fcitx5-lotus-settings` needs no line
+  since `usr/bin` is in the default set. Nothing new is granted, and the
+  server's four root-level files are unchanged, so the review of them in
+  6.0.4-1 still stands.
 - **Upstream code read:** the whole `v7.0.1...v7.0.2` diff. The settings GUI
   is rewritten as a Qt Quick app (about 2500 lines in
   `settings-gui/cpp/settings_backend.cpp`, plus `dbus_client.cpp`, the theme
@@ -76,11 +95,17 @@ read it. A version bump without an entry here does not get merged.
   organization, same release workflow. The GUI rewrite came in from an
   outside contributor (PR #720), which is why the release is more than a
   version string.
-- **Held:** the update needs `depends` (drop `python*`, add `qt6-base` and
-  `qt6-declarative`, and check whether the icon theme needs `qt6-svg`),
-  `test.sh` (the `version.py` check) and `allow` (drop the dead Python GUI
-  paths) changes. Those are recipe changes outside an audit, so this entry
-  records the findings and the pull request stays open for Daniel.
+- **Checklist answers:** all yes. The recipe downloads only upstream's
+  release artifact over HTTPS, pinned by sha256, from the project's own
+  organization; the binary carries SLSA build provenance named by `attest=`;
+  the build runs nothing here (the tarball is repackaged, nothing compiled);
+  there is no install script; and the package installs only files the default
+  set or `allow` permits, with nothing new granted. The Qt modules the new
+  GUI needs are declared, and each comes from Arch's own packages of Qt.
+- **Approval:** the recipe changes (`depends`, `test.sh`, `allow`) go beyond
+  a version bump, so the audit first reported them as a hold. Daniel approved
+  making them on 2026-11-28 ("prepare and full send"), and this entry's
+  commit carries them alongside the audit.
 - **Reviewed by:** DeepSeek V4.1 Flash for Daniel, 2026-11-28.
 
 ## 7.0.1-1 (2026-11-24)
